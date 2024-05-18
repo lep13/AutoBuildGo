@@ -8,24 +8,21 @@ import (
 	"github.com/lep13/AutoBuildGo/pkg/services/healthcheck"
 )
 
-type handlerService struct{}
-
-// New Service
-func NewHandlerService() *handlerService {
-	return &handlerService{}
+type HandlerService struct {
+	HealthChecker healthcheck.HealthChecker
 }
 
-// Implementation goes here...
-func (service *handlerService) GetHealthStatus(w http.ResponseWriter, r *http.Request) {
+func NewHandlerService(hc healthcheck.HealthChecker) *HandlerService {
+	return &HandlerService{HealthChecker: hc}
+}
 
-	status := healthcheck.GetHealthStatus()
+func (service *HandlerService) GetHealthStatus(w http.ResponseWriter, r *http.Request) {
+	status := service.HealthChecker.GetHealthStatus()
 
-	w.WriteHeader(200)
+	w.WriteHeader(http.StatusOK)
 	err := json.NewEncoder(w).Encode(status)
 	if err != nil {
-		w.WriteHeader(500)
-		fmt.Fprintf(w, `{"error":"Internal server error"}`)
-		return
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintln(w, `{"error":"Internal server error"}`)
 	}
-
 }
