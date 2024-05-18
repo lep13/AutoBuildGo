@@ -1,0 +1,5 @@
+#!groovy
+
+import golangBuildTemplate
+
+golangBuildTemplate()
