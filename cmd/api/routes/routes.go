@@ -3,7 +3,8 @@ package routes
 import (
 	"net/http"
 
-	"github.com/lep13/AutoBuildGo/cmd/api/routes/internal"
+	"github.com/lep13/AutoBuildGo/cmd/api/routes/internal/handlers"
+    "github.com/lep13/AutoBuildGo/cmd/api/routes/internal/middleware"
 
 	"github.com/gorilla/mux"
 )

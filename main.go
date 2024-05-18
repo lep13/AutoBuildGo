@@ -3,9 +3,8 @@ package main
 import (
 	"fmt"
 	"log"
-	"net/http"
 
-	"github.com/lep13/AutoBuildGo/cmd/api/routes"
+	"github.com/lep13/AutoBuildGo/cmd/api"
 )
 
 const (
@@ -14,12 +13,9 @@ const (
 )
 
 func main() {
-	http.HandleFunc("/", routes.HandleRequests)
 
-	address := fmt.Sprintf("%s:%s", host, port)
-	log.Printf("Starting server on %s\n", address)
-
-	if err := http.ListenAndServe(address, nil); err != nil {
-		log.Fatalf("Failed to start server: %s", err)
+	err := api.ServeHTTP(fmt.Sprintf("%s:%s", host, port))
+	if err != nil {
+		log.Fatalf("[ERROR]: %s", err)
 	}
 }
