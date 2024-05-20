@@ -1,9 +1,18 @@
 package healthcheck
 
-import "github.com/lep13/AutoBuildGo/pkg/model"
+type HealthChecker interface {
+	GetHealthStatus() Status
+}
 
-func GetHealthStatus() *model.Health {
-	health := new(model.Health)
-	health.Status = "UP"
-	return health
+type RealHealthChecker struct{}
+
+func (hc RealHealthChecker) GetHealthStatus() Status {
+	// Implementation here
+	return Status{Healthy: true, Message: "OK"}
+}
+
+// Status struct definition
+type Status struct {
+	Healthy bool
+	Message string
 }
