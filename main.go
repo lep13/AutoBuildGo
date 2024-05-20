@@ -6,7 +6,7 @@ import (
 	"log"
 
 	"github.com/lep13/AutoBuildGo/cmd/api"
-	"github.com/lep13/AutoBuildGo/ecr"
+	"github.com/lep13/AutoBuildGo/pkg/services/ecr"
 )
 
 const (
