@@ -5,16 +5,49 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/lep13/AutoBuildGo/pkg/services/healthcheck"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestHandlers(t *testing.T) {
+type mockHealthChecker struct {
+	shouldFail bool
+}
 
-	req := httptest.NewRequest(http.MethodGet, "/", nil)
-	res := httptest.NewRecorder()
+func (m *mockHealthChecker) GetHealthStatus() healthcheck.Status {
+	if m.shouldFail {
+		panic("simulated failure")
+	}
+	return healthcheck.Status{Healthy: true, Message: "System is healthy"}
+}
 
-	svc := NewHandlerService()
-	svc.GetHealthStatus(res, req)
+func TestGetHealthStatus(t *testing.T) {
+	cases := []struct {
+		name          string
+		shouldFail    bool
+		expectedCode  int
+		expectedBody  string
+		expectedPanic bool
+	}{
+		{"success", false, http.StatusOK, "System is healthy", false},
+		{"failure", true, http.StatusInternalServerError, "Internal server error", true},
+	}
 
-	assert.Equal(t, res.Code, 200)
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			checker := &mockHealthChecker{shouldFail: c.shouldFail}
+			service := NewHandlerService(checker)
+			recorder := httptest.NewRecorder()
+			request := httptest.NewRequest(http.MethodGet, "/health", nil)
+
+			if c.expectedPanic {
+				assert.PanicsWithValue(t, "simulated failure", func() {
+					service.GetHealthStatus(recorder, request)
+				}, "Expected panic did not occur")
+			} else {
+				service.GetHealthStatus(recorder, request)
+				assert.Equal(t, c.expectedCode, recorder.Code)
+				assert.Contains(t, recorder.Body.String(), c.expectedBody)
+			}
+		})
+	}
 }
