@@ -1,4 +1,4 @@
-module example.com/m/v2
+module github.com/lep13/AutoBuildGo
 
 go 1.22.3
 
@@ -7,7 +7,6 @@ require (
 	github.com/aws/aws-sdk-go-v2/config v1.27.15
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.28.2
 	github.com/gorilla/mux v1.8.1
-	github.com/lep13/AutoBuildGo v0.0.0-20240518083931-0aec991e353a
 	github.com/stretchr/testify v1.9.0
 )
 
