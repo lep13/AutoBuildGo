@@ -11,47 +11,49 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                checkout scm
+                script {
+                    bat 'git clone https://github.com/lep13/AutoBuildGo || exit 1'
+                }
             }
         }
         stage('Setup GitHub Repo') {
             steps {
                 script {
-                    
-                    sh "echo 'Create GitHub Repo with name: ${params.GITHUB_REPO}'"
-                    // GitHub CLI or API to create a repo
+                    // Create GitHub Repo using GitHub CLI
+                    bat "gh repo create new-repo --public --confirm"
                 }
             }
         }
         stage('Add Templates') {
             steps {
                 script {
-                    // Jenkinsfile and Go project template
-                    sh "echo 'Add template Jenkinsfile and Go project to ${params.GITHUB_REPO}'"
-                    
+                    // Clone and pubat Jenkinsfile and Go project template
+                    bat "git clone https://github.com/lep13/AutoBuildGo"
+                    bat "cd AutoBuildGo && git remote set-url origin https://github.com/${params.GITHUB_REPO}"
+                    bat "cd AutoBuildGo && git pubat -u origin master"
                 }
             }
         }
         stage('Build') {
             steps {
                 script {
-                    sh 'go build -o main ./main.go'
+                    bat 'go build -o main ./main.go'
                 }
             }
         }
         stage('Create ECR Repository') {
             steps {
                 script {
-                    sh "go run main.go --create-repo --repo-name=${params.ECR_REPO_NAME} --region=${params.AWS_REGION}"
+                    bat "go run main.go --create-repo --repo-name=${params.ECR_REPO_NAME} --region=${params.AWS_REGION}"
                 }
             }
         }
-        stage('Docker Build and Push') {
+        stage('Docker Build and Pubat') {
             steps {
                 script {
-                    sh "docker build -t ${params.ECR_REPO_NAME} ."
-                    sh "docker tag ${params.ECR_REPO_NAME} ${params.AWS_ACCOUNT_ID}.dkr.ecr.${params.AWS_REGION}.amazonaws.com/${params.ECR_REPO_NAME}:latest"
-                    sh "docker push ${params.AWS_ACCOUNT_ID}.dkr.ecr.${params.AWS_REGION}.amazonaws.com/${params.ECR_REPO_NAME}:latest"
+                    bat "docker build -t ${params.ECR_REPO_NAME} ."
+                    bat "docker tag ${params.ECR_REPO_NAME} ${params.AWS_ACCOUNT_ID}.dkr.ecr.${params.AWS_REGION}.amazonaws.com/${params.ECR_REPO_NAME}:latest"
+                    bat "docker pubat ${params.AWS_ACCOUNT_ID}.dkr.ecr.${params.AWS_REGION}.amazonaws.com/${params.ECR_REPO_NAME}:latest"
                 }
             }
         }
