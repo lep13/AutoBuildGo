@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/ecr"
+	"github.com/aws/aws-sdk-go-v2/service/ecr/types"
 )
 
 // CreateRepository creates a new ECR repository
@@ -27,7 +28,8 @@ func CreateRepository(region, repoName string) {
 
 	// Create the ECR repository
 	input := &ecr.CreateRepositoryInput{
-		RepositoryName: aws.String(repoName),
+		RepositoryName: aws.String(repoName),ImageTagMutability: types.ImageTagMutabilityImmutable,
+
 	}
 
 	result, err := svc.CreateRepository(context.TODO(), input)

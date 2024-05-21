@@ -19,7 +19,7 @@ func main() {
 	pushImage := flag.Bool("push-image", false, "Push Docker image to ECR repository")
 	region := flag.String("region", "ap-south-1", "AWS region")
 	repoName := flag.String("repo-name", "ecr-repo-1", "ECR repository name")
-	imageTag := flag.String("image-tag", "", "Docker image tag")
+	imageTag := flag.String("image-tag", "latest", "Docker image tag")
 
 	flag.Parse()
 
