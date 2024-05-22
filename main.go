@@ -9,10 +9,10 @@ import (
 	"github.com/lep13/AutoBuildGo/pkg/services/ecr"
 )
 
-// const (
-//  host = "localhost"
-//  port = "8080"
-// )
+const (
+	host = "localhost"
+	port = "8080"
+)
 
 func main() {
 	token := flag.String("token", "", "GitHub personal access token")
@@ -22,7 +22,7 @@ func main() {
 
 	createRepo := flag.Bool("create-repo", false, "Create ECR repository")
 	pushImage := flag.Bool("push-image", false, "Push Docker image to ECR repository")
-	region := flag.String("region", "us-east-1", "AWS region")
+	region := flag.String("region", "ap-south-1", "AWS region")
 	repoName := flag.String("repo-name", "ecr-repo-1", "ECR repository name")
 	imageTag := flag.String("image-tag", "latest", "Docker image tag")
 
@@ -41,7 +41,7 @@ func main() {
 		if *repoName == "" {
 			log.Fatal("repository name is required")
 		}
-		ecr.CreatePublicRepository(*region, *repoName)
+		ecr.CreateRepository(*region, *repoName)
 		return
 	}
 
@@ -56,5 +56,10 @@ func main() {
 		return
 	}
 
-	log.Println("No action specified. Use -create-repo or -push-image  flag to perform the desired action.")
+	// log.Println("No action specified. Use -create-repo or -push-image  flag to perform the desired action.")
+
+	// err1 := api.ServeHTTP(fmt.Sprintf("%s:%s", host, port))
+	// if err1 != nil {
+	// 	log.Fatalf("[ERROR]: %s", err1)
+	// }
 }
