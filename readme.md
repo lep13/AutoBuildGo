@@ -25,9 +25,8 @@ Before using AutoBuildGo, ensure you have the following prerequisites configured
 go run main.go -repo=<reponame>
 ```
 Ensure the repository name is in the correct format as specified:
-```
-(?:[a-z0-9]+(?:[._-][a-z0-9]+)*/)*[a-z0-9]+(?:[._-][a-z0-9]+)*
-```
+
+The repository name should consist of lowercase letters and numbers, optionally separated by dots, underscores, or hyphens, and can include slashes to indicate subdirectories.
 
 ### Test
 To execute tests, navigate to the directory containing the respective test case files for ECR and GitHub:
