@@ -4,16 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"log"
-	// "strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/ecr"
+	"github.com/aws/aws-sdk-go-v2/service/ecr/types"
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
 	smTypes "github.com/aws/aws-sdk-go-v2/service/secretsmanager/types"
-	"github.com/aws/aws-sdk-go-v2/service/ecr/types"
 )
 
 type AWSCredentials struct {
@@ -25,7 +23,8 @@ type AWSCredentials struct {
 func getAWSCredentials(secretName string) (*AWSCredentials, error) {
 	cfg, err := config.LoadDefaultConfig(context.Background())
 	if err != nil {
-		return nil, fmt.Errorf("unable to load SDK config, %v", err)
+		log.Printf("Unable to load SDK config: %v", err)
+		return nil, err
 	}
 
 	svc := secretsmanager.NewFromConfig(cfg)
@@ -38,16 +37,19 @@ func getAWSCredentials(secretName string) (*AWSCredentials, error) {
 	if err != nil {
 		var resourceNotFoundException *smTypes.ResourceNotFoundException
 		if ok := errorAs(err, &resourceNotFoundException); ok {
-			return nil, fmt.Errorf("the requested secret %s was not found", secretName)
+			log.Printf("The requested secret %s was not found", secretName)
+			return nil, err
 		}
 
-		return nil, fmt.Errorf("failed to retrieve secret: %v", err)
+		log.Printf("Failed to retrieve secret: %v", err)
+		return nil, err
 	}
 
 	var credentials AWSCredentials
 	err = json.Unmarshal([]byte(*result.SecretString), &credentials)
 	if err != nil {
-		return nil, fmt.Errorf("failed to unmarshal secret: %v", err)
+		log.Printf("Failed to unmarshal secret: %v", err)
+		return nil, err
 	}
 
 	return &credentials, nil
@@ -60,24 +62,26 @@ func errorAs(err error, target interface{}) bool {
 	return errors.As(err, target)
 }
 
-func CreateRepo() error {
-	secretName := "gotask"
+func CreateRepo(repoName string) error {
+	secretName := "gotask1"
 
 	_, err := getAWSCredentials(secretName)
 	if err != nil {
-		return fmt.Errorf("failed to get AWS credentials: %v", err)
+		log.Printf("Failed to get AWS credentials: %v", err)
+		return err
 	}
 
 	cfg, err := config.LoadDefaultConfig(context.Background())
 	if err != nil {
-		return fmt.Errorf("unable to load SDK config, %v", err)
+		log.Printf("Unable to load SDK config: %v", err)
+		return err
 	}
 
 	svc := ecr.NewFromConfig(cfg)
 
-	repoName := "my-repo"
 	input := &ecr.CreateRepositoryInput{
-		RepositoryName: aws.String(repoName),
+		RepositoryName:     aws.String(repoName),
+		ImageTagMutability: types.ImageTagMutabilityImmutable,
 	}
 
 	_, err = svc.CreateRepository(context.Background(), input)
@@ -87,9 +91,8 @@ func CreateRepo() error {
 			log.Printf("Repository %s already exists.", repoName)
 			return nil
 		}
-		return fmt.Errorf("failed to create repository: %v", err)
+		log.Printf("Failed to create repository: %v", err)
+		return err
 	}
-
-	log.Printf("Repository %s created successfully.", repoName)
 	return nil
 }

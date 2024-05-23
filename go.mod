@@ -10,7 +10,10 @@ require (
 	github.com/stretchr/testify v1.9.0
 )
 
-require github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.29.0 // indirect
+require (
+	github.com/aws/aws-sdk-go v1.53.8 // indirect
+	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.29.0 // indirect
+)
 
 require (
 	github.com/Microsoft/go-winio v0.4.14 // indirect
@@ -45,8 +48,8 @@ require (
 	go.opentelemetry.io/otel v1.26.0 // indirect
 	go.opentelemetry.io/otel/metric v1.26.0 // indirect
 	go.opentelemetry.io/otel/trace v1.26.0 // indirect
-	golang.org/x/crypto v0.13.0 // indirect
-	golang.org/x/net v0.13.0 // indirect
+	golang.org/x/crypto v0.14.0 // indirect
+	golang.org/x/net v0.17.0 // indirect
 	golang.org/x/sys v0.13.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
