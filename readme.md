@@ -2,7 +2,7 @@
 # AutoBuildGo
 
 ## Description
-AutoBuildGo is a utility tool designed to streamline the setup of new software projects by automatically creating a Git repository with a basic Golang service template, and an Elastic Container Registry (ECR) on AWS. This enables quick start-up and standardized initial setup for Golang-based projects.
+AutoBuildGo is a utility tool that setups a new software project by automatically creating a Git repository with a basic Golang service template, and an Elastic Container Registry (ECR) on AWS. This enables quick start-up and standardized initial setup for Golang-based projects.
 
 ## Prerequisites
 Before using AutoBuildGo, ensure you have the following prerequisites configured:
