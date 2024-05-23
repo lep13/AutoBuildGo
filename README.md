@@ -1,16 +1,32 @@
-# AutoBuildGo
-template for services
+Command to create ECR and Github Repositories:
+go run main.go <reponame>   
 
+Command to test:
+Move to the directory of respective test case files for ECR and Github
+go test
 
-<hr>
+Note:
+Make sure that reponame is in correct format
+format: (?:[a-z0-9]+(?:[._-][a-z0-9]+)*/)*[a-z0-9]+(?:[._-][a-z0-9]+)*
 
-## basic:
+Valid Repository Names:
 
-* pkg/services : add services here.
-* pkg/iface : update interfaces here.
-* pkg/model : update models here.
-* cmd/api/routes/internal/handers : update handlers for new services.
-* cmd/api/routes : register new routes for new handler functions.
-* cmd/api/routes/internal/middleware : update middleware functions.
+valid-repo
+valid_repo
+valid.repo
+valid/repo/name
+valid-repo123
+123
+valid123
 
-<hr>
+Invalid Repository Names:
+
+-invalid-repo (Leading hyphen)
+invalid-repo- (Trailing hyphen)
+invalid--repo (Consecutive hyphens)
+/invalid-repo (Leading slash)
+invalid-repo/ (Trailing slash)
+InvalidRepo (Uppercase letters)
+répö-nämé (Non-ASCII characters)
+invalid repo (Contains spaces)
+invalid@repo (Contains special characters)

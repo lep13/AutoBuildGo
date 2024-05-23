@@ -10,6 +10,8 @@ require (
 	github.com/stretchr/testify v1.9.0
 )
 
+require github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.29.0 // indirect
+
 require (
 	github.com/Microsoft/go-winio v0.4.14 // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.15 // indirect
