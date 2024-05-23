@@ -6,14 +6,15 @@ import (
 	"errors"
 	"fmt"
 	"log"
+
 	// "strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/ecr"
+	"github.com/aws/aws-sdk-go-v2/service/ecr/types"
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
 	smTypes "github.com/aws/aws-sdk-go-v2/service/secretsmanager/types"
-	"github.com/aws/aws-sdk-go-v2/service/ecr/types"
 )
 
 type AWSCredentials struct {
@@ -59,9 +60,8 @@ func errorAs(err error, target interface{}) bool {
 	}
 	return errors.As(err, target)
 }
-
-func CreateRepo() error {
-	secretName := "gotask"
+func CreateRepo(repoName string) error {
+	secretName := "gotask1"
 
 	_, err := getAWSCredentials(secretName)
 	if err != nil {
@@ -75,9 +75,9 @@ func CreateRepo() error {
 
 	svc := ecr.NewFromConfig(cfg)
 
-	repoName := "my-repo"
 	input := &ecr.CreateRepositoryInput{
-		RepositoryName: aws.String(repoName),
+		RepositoryName:     aws.String(repoName),
+		ImageTagMutability: types.ImageTagMutabilityImmutable,
 	}
 
 	_, err = svc.CreateRepository(context.Background(), input)
@@ -89,7 +89,5 @@ func CreateRepo() error {
 		}
 		return fmt.Errorf("failed to create repository: %v", err)
 	}
-
-	log.Printf("Repository %s created successfully.", repoName)
 	return nil
 }
