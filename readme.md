@@ -10,7 +10,7 @@ Before using AutoBuildGo, ensure you have the following prerequisites configured
 - Configured AWS CLI
 - Two secrets stored in AWS Secrets Manager:
   - `github_token`: Your GitHub access token.
-  - `gotask1`: Specific secret required for task operations.
+  - `gotask1`: Your AWS Access keys.
 
 ## Components Used
 - **GitHub Repositories**: Automates the creation and setup of new repositories with standard Golang templates.
