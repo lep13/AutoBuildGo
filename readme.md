@@ -1,32 +1,38 @@
-Command to create ECR and Github Repositories:
-go run main.go -repo = <reponame>   
 
-Command to test:
-Move to the directory of respective test case files for ECR and Github
+# AutoBuildGo
+
+## Description
+AutoBuildGo is a utility tool designed to streamline the setup of new software projects by automatically creating a Git repository with a basic Golang service template, and an Elastic Container Registry (ECR) on AWS. This enables quick start-up and standardized initial setup for Golang-based projects.
+
+## Prerequisites
+Before using AutoBuildGo, ensure you have the following prerequisites configured:
+- AWS Account
+- Configured AWS CLI
+- Two secrets stored in AWS Secrets Manager:
+  - `github_token`: Your GitHub access token.
+  - `gotask1`: Your AWS Access keys.
+
+## Components Used
+- **GitHub Repositories**: Automates the creation and setup of new repositories with standard Golang templates.
+- **AWS Elastic Container Registry (ECR)**: Automates the creation of ECR for Docker container management.
+- **AWS Secrets Manager**: Utilizes secrets for secure automation processes.
+- **Go Modules**: Uses Go modules to manage dependencies.
+- **GitHub Actions**: Implements CI/CD pipelines for automated testing and deployment.
+
+## Commands
+### Create Repositories
+```bash
+go run main.go -repo=<reponame>
+```
+Ensure the repository name is in the correct format as specified:
+```
+(?:[a-z0-9]+(?:[._-][a-z0-9]+)*/)*[a-z0-9]+(?:[._-][a-z0-9]+)*
+```
+
+### Test
+To execute tests, navigate to the directory containing the respective test case files for ECR and GitHub:
+```bash
 go test
+```
 
-Note:
-Make sure that reponame is in correct format
-format: (?:[a-z0-9]+(?:[._-][a-z0-9]+)*/)*[a-z0-9]+(?:[._-][a-z0-9]+)*
-
-Valid Repository Names:
-
-valid-repo
-valid_repo
-valid.repo
-valid/repo/name
-valid-repo123
-123
-valid123
-
-Invalid Repository Names:
-
--invalid-repo (Leading hyphen)
-invalid-repo- (Trailing hyphen)
-invalid--repo (Consecutive hyphens)
-/invalid-repo (Leading slash)
-invalid-repo/ (Trailing slash)
-InvalidRepo (Uppercase letters)
-répö-nämé (Non-ASCII characters)
-invalid repo (Contains spaces)
-invalid@repo (Contains special characters)
+For more details and updates, refer to the [project's GitHub page](https://github.com/lep13/AutoBuildGo).
