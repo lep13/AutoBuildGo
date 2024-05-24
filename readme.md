@@ -22,7 +22,7 @@ Before using AutoBuildGo, ensure you have the following prerequisites configured
 ## Commands
 ### Create Repositories
 ```bash
-go run main.go -repo=<reponame>
+go run main.go <reponame>
 ```
 Ensure the repository name is in the correct format as specified:
 
