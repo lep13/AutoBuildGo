@@ -5,7 +5,7 @@ import (
 	"log"
 
 	"github.com/lep13/AutoBuildGo/services/ecr"
-	"github.com/lep13/AutoBuildGo/services/gitsetup"
+	// "github.com/lep13/AutoBuildGo/services/gitsetup"
 )
 
 func main() {
@@ -23,13 +23,13 @@ func main() {
 	}
 
 	// Create Git repository
-	config := gitsetup.RepoConfig{
-		Name:        *repoName,
-		Description: "Created from a template via automated setup",
-		Private:     true,
-		AutoInit:    true,
-	}
-	gitsetup.CreateRepository(config)
+	// config := gitsetup.RepoConfig{
+	// 	Name:        *repoName,
+	// 	Description: "Created from a template via automated setup",
+	// 	Private:     true,
+	// 	AutoInit:    true,
+	// }
+	// gitsetup.CreateRepository(config)
 
 	log.Println("ECR and Git repositories created successfully")
 }
