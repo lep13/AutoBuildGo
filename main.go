@@ -1,35 +1,30 @@
 package main
 
 import (
-	"flag"
 	"log"
+	"os"
 
 	"github.com/lep13/AutoBuildGo/services/ecr"
-	// "github.com/lep13/AutoBuildGo/services/gitsetup"
+	"github.com/lep13/AutoBuildGo/services/gitsetup"
 )
 
 func main() {
-	repoName := flag.String("repo", "", "The name of the repository to create")
-	flag.Parse()
-
-	if *repoName == "" {
-		log.Fatal("Repository name is required. Usage: go run main.go -repo=<repo-name>")
+	if len(os.Args) != 2 {
+		log.Fatal("Usage: go run main.go <repo-name>")
 	}
+	repoName := os.Args[1]
 
-	// Create ECR repository
-	err := ecr.CreateRepo(*repoName)
-	if err != nil {
+	// Create ECR Repository
+	if err := ecr.CreateRepo(repoName); err != nil {
 		log.Fatalf("Failed to create ECR repository: %v", err)
 	}
 
-	// Create Git repository
-	// config := gitsetup.RepoConfig{
-	// 	Name:        *repoName,
-	// 	Description: "Created from a template via automated setup",
-	// 	Private:     true,
-	// 	AutoInit:    true,
-	// }
-	// gitsetup.CreateRepository(config)
+	// Create Git Repository
+	config := gitsetup.DefaultRepoConfig(repoName)
+
+	if err := gitsetup.CreateGitRepository(config); err != nil {
+		log.Fatalf("Failed to create Git repository: %v", err)
+	}
 
 	log.Println("ECR and Git repositories created successfully")
 }
