@@ -1,10 +1,11 @@
 package gitsetup
 
 type RepoConfig struct {
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	Private     bool   `json:"private"`
-	AutoInit    bool   `json:"auto_init"`
+	Name        string
+	Description string
+	Private     bool
+	AutoInit    bool
+	TemplateURL string
 }
 
 type SecretData struct {
