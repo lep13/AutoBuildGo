@@ -4,7 +4,6 @@ import (
 	"log"
 	"os"
 	"strings"
-
 	"github.com/lep13/AutoBuildGo/services/ecr"
 	"github.com/lep13/AutoBuildGo/services/gitsetup"
 )
@@ -14,7 +13,7 @@ func main() {
 		log.Fatal("Usage: go run main.go <repo-name> [\"optional description\"]")
 	}
 	repoName := os.Args[1]
-	description := "Default description for the repository" // Default description if none provided
+	description := "Created from a template via automated setup" // Default description if none provided
 
 	if len(os.Args) > 2 {
 		description = strings.Join(os.Args[2:], " ") // Combine all arguments after repoName as description
