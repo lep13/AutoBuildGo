@@ -12,9 +12,7 @@ import (
 )
 
 func CreateRepo(repoName string) error {
-	secretName := "gotask1"
-
-	creds, err := GetAWSCredentials(secretName)
+	creds, err := GetAWSCredentials()
 	if err != nil {
 		log.Printf("Failed to get AWS credentials: %v", err)
 		return err
@@ -40,7 +38,7 @@ func CreateRepo(repoName string) error {
 
 	svc := ecr.NewFromConfig(cfg)
 
-	input := &ecr.CreateRepositoryInput{
+	input := ecr.CreateRepositoryInput{
 		RepositoryName:     aws.String(repoName),
 		ImageTagMutability: types.ImageTagMutabilityImmutable,
 		ImageScanningConfiguration: &types.ImageScanningConfiguration{
@@ -48,7 +46,7 @@ func CreateRepo(repoName string) error {
 		},
 	}
 
-	_, err = svc.CreateRepository(context.Background(), input)
+	_, err = svc.CreateRepository(context.Background(), &input)
 	if err != nil {
 		var repoAlreadyExistsErr *types.RepositoryAlreadyExistsException
 		if errors.As(err, &repoAlreadyExistsErr) {
