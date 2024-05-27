@@ -2,61 +2,32 @@ package ecr
 
 import (
 	"context"
-	"encoding/json"
 	"log"
-
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
-	smTypes "github.com/aws/aws-sdk-go-v2/service/secretsmanager/types"
+	"github.com/aws/aws-sdk-go-v2/config"
 )
 
 type AWSCredentials struct {
-	AccessKeyID     string `json:"access_key_id"`
-	SecretAccessKey string `json:"secret_access_key"`
-	SessionToken    string `json:"session_token"`
+	AccessKeyID     string
+	SecretAccessKey string
+	SessionToken    string
 }
 
-func GetAWSCredentials(secretName string) (*AWSCredentials, error) {
-	cfg, err := LoadConfig()
+func GetAWSCredentials() (AWSCredentials, error) {
+	cfg, err := config.LoadDefaultConfig(context.Background())
 	if err != nil {
-		return nil, err
+		log.Printf("Failed to load AWS SDK config: %v", err)
+		return AWSCredentials{}, err
 	}
 
-	svc := GetSecretsManagerClient(cfg)
-
-	input := &secretsmanager.GetSecretValueInput{
-		SecretId: aws.String(secretName),
-	}
-
-	result, err := svc.GetSecretValue(context.Background(), input)
+	creds, err := cfg.Credentials.Retrieve(context.Background())
 	if err != nil {
-		var resourceNotFoundException *smTypes.ResourceNotFoundException
-		if ok := errorAs(err, &resourceNotFoundException); ok {
-			log.Printf("The requested secret %s was not found", secretName)
-			return nil, err
-		}
-
-		log.Printf("Failed to retrieve secret: %v", err)
-		return nil, err
+		log.Printf("Failed to retrieve AWS credentials: %v", err)
+		return AWSCredentials{}, err
 	}
 
-	// Parse the secret assuming it is a map
-	var secretMap map[string]string
-	err = json.Unmarshal([]byte(*result.SecretString), &secretMap)
-	if err != nil {
-		log.Printf("Failed to unmarshal secret: %v", err)
-		return nil, err
-	}
-
-	// Convert the map to AWSCredentials
-	var credentials AWSCredentials
-	for k, v := range secretMap {
-		credentials.AccessKeyID = k
-		credentials.SecretAccessKey = v
-		// Assume no session token in this case
-		credentials.SessionToken = ""
-		break
-	}
-
-	return &credentials, nil
+	return AWSCredentials{
+		AccessKeyID:     creds.AccessKeyID,
+		SecretAccessKey: creds.SecretAccessKey,
+		SessionToken:    creds.SessionToken,
+	}, nil
 }
