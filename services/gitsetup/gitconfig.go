@@ -3,25 +3,29 @@ package gitsetup
 import (
 	"log"
 	"os"
-	"path/filepath"
 
 	"github.com/joho/godotenv"
 )
 
 func init() {
-	// Find the root directory
-	root, err := os.Getwd()
+	loadEnv()
+}
+
+func loadEnv() {
+	// Attempt to load .env file first
+	err := godotenv.Load()
 	if err != nil {
-		log.Fatalf("Error getting working directory: %s", err)
-	}
-	// Attempt to load the .env file
-	err = godotenv.Load(filepath.Join(root, ".env"))
-	if err != nil {
-		log.Fatalf("No .env file found: %s", err)
+		log.Println("Debug: .env file not loaded")
 	}
 }
 
-// default repository configuration with a dynamic description.
+func checkTemplateURL() {
+	if os.Getenv("TEMPLATE_URL") == "" {
+		panic("TEMPLATE_URL must be set in the environment")
+	}
+}
+
+// DefaultRepoConfig constructs a default repository configuration.
 func DefaultRepoConfig(repoName string, description string) RepoConfig {
 	templateURL := os.Getenv("TEMPLATE_URL")
 	if templateURL == "" {

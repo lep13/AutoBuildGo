@@ -8,45 +8,37 @@ import (
 	"net/http"
 )
 
-// HttpClient interface for making HTTP requests
-type HttpClient interface {
+// HTTPClient is an interface that defines the Do method used by http.Client
+type HTTPClient interface {
 	Do(req *http.Request) (*http.Response, error)
 }
 
-// RealHttpClient implements HttpClient using http.DefaultClient
-type RealHttpClient struct{}
-
-func (c *RealHttpClient) Do(req *http.Request) (*http.Response, error) {
-	return http.DefaultClient.Do(req)
+// GitClient is a structure that holds dependencies for making HTTP requests.
+type GitClient struct {
+	HTTPClient      HTTPClient
+	FetchSecretFunc func() (string, error)
 }
 
-// CommandExecutor interface for executing commands
-type CommandExecutor interface {
-	ExecuteCommand(command string, args ...string) ([]byte, error)
+// NewGitClient returns an instance of GitClient with default dependencies.
+func NewGitClient() *GitClient {
+	return &GitClient{
+		HTTPClient:      &http.Client{},
+		FetchSecretFunc: FetchSecretToken,
+	}
 }
 
-// DefaultCommandExecutor implements the CommandExecutor interface using os/exec package
-type DefaultCommandExecutor struct{}
-
-func (exec *DefaultCommandExecutor) ExecuteCommand(command string, args ...string) ([]byte, error) {
-	cmd := exec.Command(command, args...)
-	var out bytes.Buffer
-	cmd.Stdout = &out
-	err := cmd.Run()
-	return out.Bytes(), err
-}
-
-// NewGitHub repository using the specified configuration.
-func CreateGitRepository(client HttpClient, config RepoConfig, executor CommandExecutor) error {
-	token, err := FetchSecretToken(executor)
+// CreateGitRepository creates a new GitHub repository using the specified configuration.
+func (client *GitClient) CreateGitRepository(config RepoConfig) error {
+	// Fetch the token using the FetchSecretToken function.
+	token, err := client.FetchSecretFunc()
 	if err != nil {
 		return err
 	}
-	return createRepositoryWithTemplate(client, config, token)
+	return client.createRepositoryWithTemplate(config, token)
 }
 
-// Sends a request to GitHub API to create a repository from a template.
-func createRepositoryWithTemplate(client HttpClient, config RepoConfig, token string) error {
+// createRepositoryWithTemplate sends a request to GitHub API to create a repository from a template.
+func (client *GitClient) createRepositoryWithTemplate(config RepoConfig, token string) error {
 	data, err := json.Marshal(map[string]interface{}{
 		"name":        config.Name,
 		"description": config.Description,
@@ -64,20 +56,20 @@ func createRepositoryWithTemplate(client HttpClient, config RepoConfig, token st
 	req.Header.Set("Authorization", "token "+token)
 	req.Header.Set("Content-Type", "application/json")
 
-	resp, err := client.Do(req)
+	resp, err := client.HTTPClient.Do(req)
 	if err != nil {
 		return err
 	}
 	defer resp.Body.Close()
+
+	if resp.StatusCode == http.StatusCreated {
+		return nil
+	}
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return fmt.Errorf("failed to read response body: %w", err)
 	}
 
-	if resp.StatusCode != http.StatusCreated {
-		return fmt.Errorf("failed to create repository, status code: %d, response: %s", resp.StatusCode, string(body))
-	}
-
-	return nil
+	return fmt.Errorf("failed to create repository, status code: %d, response: %s", resp.StatusCode, string(body))
 }

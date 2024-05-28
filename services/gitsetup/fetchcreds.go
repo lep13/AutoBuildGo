@@ -8,30 +8,41 @@ import (
 	"strings"
 )
 
-// CommandExecutor interface for executing commands
-type CommandExecutor interface {
-	ExecuteCommand(name string, arg ...string) ([]byte, error)
+// CommandRunner defines an interface for running commands.
+type CommandRunner interface {
+	Run(cmd *exec.Cmd) error
+	Output(cmd *exec.Cmd) ([]byte, error)
 }
 
-// RealCommandExecutor implements CommandExecutor using os/exec
-type RealCommandExecutor struct{}
+// DefaultCommandRunner is the default implementation of CommandRunner.
+type DefaultCommandRunner struct{}
 
-func (e *RealCommandExecutor) ExecuteCommand(name string, arg ...string) ([]byte, error) {
-	cmd := exec.Command(name, arg...)
+// Run executes a command.
+func (r *DefaultCommandRunner) Run(cmd *exec.Cmd) error {
+	return cmd.Run()
+}
+
+// Output gets the output of a command.
+func (r *DefaultCommandRunner) Output(cmd *exec.Cmd) ([]byte, error) {
+	return cmd.Output()
+}
+
+var runner CommandRunner = &DefaultCommandRunner{}
+
+// FetchSecretToken retrieves the GitHub token from the local Git configuration using the git credential system.
+func FetchSecretToken() (string, error) {
+	cmd := exec.Command("git", "credential", "fill")
+	cmdInput := bytes.NewBufferString("url=https://github.com\n")
+	cmd.Stdin = cmdInput
+
 	var out bytes.Buffer
 	cmd.Stdout = &out
-	err := cmd.Run()
-	return out.Bytes(), err
-}
-
-// FetchSecretToken uses the CommandExecutor to retrieve the secret token
-func FetchSecretToken(executor CommandExecutor) (string, error) {
-	output, err := executor.ExecuteCommand("git", "credential", "fill")
+	err := runner.Run(cmd)
 	if err != nil {
 		return "", fmt.Errorf("error running git credential fill: %v", err)
 	}
 
-	scanner := bufio.NewScanner(bytes.NewReader(output))
+	scanner := bufio.NewScanner(&out)
 	for scanner.Scan() {
 		line := scanner.Text()
 		if strings.HasPrefix(line, "password=") {
