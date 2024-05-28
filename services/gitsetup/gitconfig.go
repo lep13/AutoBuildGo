@@ -1,12 +1,43 @@
 package gitsetup
 
-// default repository configuration with a dynamic description.
+import (
+	"log"
+	"os"
+
+	"github.com/joho/godotenv"
+)
+
+func init() {
+	//loading env variables from .env
+	loadEnv()
+}
+
+func loadEnv() {
+	// Attempt to load .env file first
+	err := godotenv.Load()
+	if err != nil {
+		log.Println("Debug: .env file not loaded")
+	}
+}
+
+func checkTemplateURL() {
+	if os.Getenv("TEMPLATE_URL") == "" {
+		panic("TEMPLATE_URL must be set in the environment")
+	}
+}
+
+// struct with default repository configuration.
 func DefaultRepoConfig(repoName string, description string) RepoConfig {
-    return RepoConfig{
-        Name:        repoName,
-        Description: description,
-        Private:     true,
-        AutoInit:    true,
-        TemplateURL: "https://api.github.com/repos/lep13/ServiceTemplate/generate",
-    }
+	templateURL := os.Getenv("TEMPLATE_URL")
+	if templateURL == "" {
+		panic("TEMPLATE_URL must be set in the environment")
+	}
+
+	return RepoConfig{
+		Name:        repoName,
+		Description: description,
+		Private:     true,
+		AutoInit:    true,
+		TemplateURL: templateURL,
+	}
 }

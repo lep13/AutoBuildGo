@@ -17,7 +17,7 @@ func main() {
 		log.Fatal("Usage: go run main.go <repo-name> [\"optional description\"]")
 	}
 	repoName := os.Args[1]
-	// description := "Default description for the repository" // Default description if none provided
+	description := "Created from a template via automated setup" // Default description if none provided
 
 	// if len(os.Args) > 2 {
 	// 	description = strings.Join(os.Args[2:], " ") // Combine all arguments after repoName as description
@@ -32,11 +32,12 @@ func main() {
 	}
 
 	// Create Git Repository
-	// config := gitsetup.DefaultRepoConfig(repoName, description)
+	config := gitsetup.DefaultRepoConfig(repoName, description)
+	gitClient := gitsetup.NewGitClient() // Create an instance of GitClient
 
-	// if err := gitsetup.CreateGitRepository(config); err != nil {
-	// 	log.Fatalf("Failed to create Git repository: %v", err)
-	// }
+	if err := gitClient.CreateGitRepository(config); err != nil {
+		log.Fatalf("Failed to create Git repository: %v", err)
+	}
 
 	log.Println("ECR and Git repositories created successfully")
 }
