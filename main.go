@@ -27,8 +27,9 @@ func main() {
 
 	// Create Git Repository
 	config := gitsetup.DefaultRepoConfig(repoName, description)
+	gitClient := gitsetup.NewGitClient() // Create an instance of GitClient
 
-	if err := gitsetup.CreateGitRepository(config); err != nil {
+	if err := gitClient.CreateGitRepository(config); err != nil {
 		log.Fatalf("Failed to create Git repository: %v", err)
 	}
 

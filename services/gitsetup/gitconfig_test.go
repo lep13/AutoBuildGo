@@ -21,19 +21,17 @@ func TestLoadEnvSuccess(t *testing.T) {
 	assert.Equal(t, expectedURL, result, "TEMPLATE_URL did not match expected value")
 }
 
-
 func TestLoadEnvFailNoEnvFile(t *testing.T) {
-    // Clear TEMPLATE_URL to simulate a missing .env and unset environment variable
-    originalValue := os.Getenv("TEMPLATE_URL")
-    os.Unsetenv("TEMPLATE_URL")
-    defer os.Setenv("TEMPLATE_URL", originalValue) // Restore after test
+	// Clear TEMPLATE_URL to simulate a missing .env and unset environment variable
+	originalValue := os.Getenv("TEMPLATE_URL")
+	os.Unsetenv("TEMPLATE_URL")
+	defer os.Setenv("TEMPLATE_URL", originalValue) // Restore after test
 
-    // This should panic because TEMPLATE_URL is not set and no .env will be found
-    assert.Panics(t, func() {
-        loadEnv()
-    }, "Expected panic due to missing TEMPLATE_URL and no .env file")
+	// This should panic because TEMPLATE_URL is not set and no .env will be found
+	assert.Panics(t, func() {
+		loadEnv()
+	}, "Expected panic due to missing TEMPLATE_URL and no .env file")
 }
-
 
 func TestCheckTemplateURLPanics(t *testing.T) {
 	// Ensure no TEMPLATE_URL is set
@@ -58,34 +56,34 @@ func TestCheckTemplateURLSuccess(t *testing.T) {
 }
 
 func TestDefaultRepoConfigSuccess(t *testing.T) {
-    // Setup: Set TEMPLATE_URL in environment
-    expectedURL := "https://example.com/template"
-    os.Setenv("TEMPLATE_URL", expectedURL)
-    defer os.Unsetenv("TEMPLATE_URL")
+	// Setup: Set TEMPLATE_URL in environment
+	expectedURL := "https://example.com/template"
+	os.Setenv("TEMPLATE_URL", expectedURL)
+	defer os.Unsetenv("TEMPLATE_URL")
 
-    repoName := "test-repo"
-    description := "Test repository"
+	repoName := "test-repo"
+	description := "Test repository"
 
-    // Call the function
-    config := DefaultRepoConfig(repoName, description)
+	// Call the function
+	config := DefaultRepoConfig(repoName, description)
 
-    // Assertions
-    assert.Equal(t, repoName, config.Name)
-    assert.Equal(t, description, config.Description)
-    assert.Equal(t, true, config.Private)
-    assert.Equal(t, true, config.AutoInit)
-    assert.Equal(t, expectedURL, config.TemplateURL)
+	// Assertions
+	assert.Equal(t, repoName, config.Name)
+	assert.Equal(t, description, config.Description)
+	assert.Equal(t, true, config.Private)
+	assert.Equal(t, true, config.AutoInit)
+	assert.Equal(t, expectedURL, config.TemplateURL)
 }
 
 func TestDefaultRepoConfigMissingTemplateURL(t *testing.T) {
-    // Ensure TEMPLATE_URL is not set
-    os.Unsetenv("TEMPLATE_URL")
+	// Ensure TEMPLATE_URL is not set
+	os.Unsetenv("TEMPLATE_URL")
 
-    repoName := "test-repo"
-    description := "Test repository"
+	repoName := "test-repo"
+	description := "Test repository"
 
-    // Expected to panic because TEMPLATE_URL is not set
-    assert.Panics(t, func() {
-        DefaultRepoConfig(repoName, description)
-    }, "Expected panic due to missing TEMPLATE_URL")
+	// Expected to panic because TEMPLATE_URL is not set
+	assert.Panics(t, func() {
+		DefaultRepoConfig(repoName, description)
+	}, "Expected panic due to missing TEMPLATE_URL")
 }
