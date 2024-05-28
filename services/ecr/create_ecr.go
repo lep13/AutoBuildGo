@@ -2,43 +2,22 @@ package ecr
 
 import (
 	"context"
-	"log"
 	"errors"
+	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/ecr"
 	"github.com/aws/aws-sdk-go-v2/service/ecr/types"
 )
 
-func CreateRepo(repoName string) error {
-	creds, err := GetAWSCredentials()
-	if err != nil {
-		// log.Printf("Failed to get AWS credentials: %v", err)
-		return err
-	}
+// AWSClient interface defines the methods from ecr.Client that are used in CreateRepo function.
+type AWSClient interface {
+	CreateRepository(ctx context.Context, params *ecr.CreateRepositoryInput, optFns ...func(*ecr.Options)) (*ecr.CreateRepositoryOutput, error)
+}
 
-	cfg, err := config.LoadDefaultConfig(context.Background(),
-		config.WithCredentialsProvider(
-			aws.NewCredentialsCache(
-				aws.CredentialsProviderFunc(func(context.Context) (aws.Credentials, error) {
-					return aws.Credentials{
-						AccessKeyID:     creds.AccessKeyID,
-						SecretAccessKey: creds.SecretAccessKey,
-						SessionToken:    creds.SessionToken,
-					}, nil
-				}),
-			),
-		),
-	)
-	if err != nil {
-		// log.Printf("Unable to load SDK config: %v", err)
-		return err
-	}
-
-	svc := ecr.NewFromConfig(cfg)
-
-	input := ecr.CreateRepositoryInput{
+// CreateRepo creates a repository in Amazon ECR using the provided AWS client.
+func CreateRepo(repoName string, client AWSClient) error {
+	input := &ecr.CreateRepositoryInput{
 		RepositoryName:     aws.String(repoName),
 		ImageTagMutability: types.ImageTagMutabilityImmutable,
 		ImageScanningConfiguration: &types.ImageScanningConfiguration{
@@ -46,12 +25,12 @@ func CreateRepo(repoName string) error {
 		},
 	}
 
-	_, err = svc.CreateRepository(context.Background(), &input)
+	_, err := client.CreateRepository(context.Background(), input)
 	if err != nil {
 		var repoAlreadyExistsErr *types.RepositoryAlreadyExistsException
 		if errors.As(err, &repoAlreadyExistsErr) {
 			log.Printf("Repository %s already exists.", repoName)
-			return nil
+			return nil // Return early if repository already exists
 		}
 		log.Printf("Failed to create repository: %v", err)
 		return err

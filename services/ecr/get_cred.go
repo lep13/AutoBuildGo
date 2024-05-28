@@ -6,7 +6,7 @@ import (
 
 	// "github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/config"
+	// "github.com/aws/aws-sdk-go-v2/config"
 )
 
 type AWSCredentialsRetriever interface {
@@ -14,20 +14,15 @@ type AWSCredentialsRetriever interface {
 }
 
 // GetAWSCredentials retrieves AWS credentials
-func GetAWSCredentials() (AWSCredentials, error) {
-    cfg, err := config.LoadDefaultConfig(context.Background())
-    if err != nil {
-        return AWSCredentials{}, err
-    }
+func GetAWSCredentials(retriever AWSCredentialsRetriever) (AWSCredentials, error) {
+	creds, err := retriever.Retrieve(context.Background())
+	if err != nil {
+		return AWSCredentials{}, errors.New("failed to retrieve AWS credentials")
+	}
 
-    creds, err := cfg.Credentials.Retrieve(context.Background())
-    if err != nil {
-        return AWSCredentials{}, errors.New("failed to retrieve AWS credentials")
-    }
-
-    return AWSCredentials{
-        AccessKeyID:     creds.AccessKeyID,
-        SecretAccessKey: creds.SecretAccessKey,
-        SessionToken:    creds.SessionToken,
-    }, err
+	return AWSCredentials{
+		AccessKeyID:     creds.AccessKeyID,
+		SecretAccessKey: creds.SecretAccessKey,
+		SessionToken:    creds.SessionToken,
+	}, nil
 }

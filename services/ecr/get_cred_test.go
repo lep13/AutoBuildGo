@@ -1,60 +1,64 @@
 package ecr
 
 import (
-	"context"
-	"errors"
-	"testing"
+    "context"
+    "errors"
+    "testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	// "github.com/aws/aws-sdk-go-v2/config"
+    "github.com/aws/aws-sdk-go-v2/aws"
+    "github.com/stretchr/testify/assert"
+    "github.com/stretchr/testify/mock"
 )
 
-
+// MockAWSCredentialsRetriever is a mock implementation of AWSCredentialsRetriever interface
 type MockAWSCredentialsRetriever struct {
-    SimulateSuccess bool
-    
+    mock.Mock
 }
 
+// Retrieve mocks the Retrieve method of AWSCredentialsRetriever interface
 func (m *MockAWSCredentialsRetriever) Retrieve(ctx context.Context) (aws.Credentials, error) {
-    if m.SimulateSuccess {
-        // Simulate a successful retrieval by returning dummy credentials
-        return aws.Credentials{
-            AccessKeyID:     "access_key_id",
-            SecretAccessKey: "secret_access_key",
-            SessionToken:    "session_token",
-        }, nil
-    }
-    // Simulate an error by returning a mock error
-    return aws.Credentials{}, errors.New("mock error")
+    args := m.Called(ctx)
+    return args.Get(0).(aws.Credentials), args.Error(1)
 }
-func TestRetrieveMethod(t *testing.T) {
-    t.Run("Positive case", func(t *testing.T) {
-        // Initialize a mock object with success simulation
-        mockRetriever := &MockAWSCredentialsRetriever{
-            SimulateSuccess: true,
-        }
 
-        // Call the Retrieve method with the mock object
-        _, err := mockRetriever.Retrieve(context.Background())
 
-        // Check if there is no error
-        if err != nil {
-            t.Errorf("Unexpected error: %v", err)
-        }
-    })
+func TestGetAWSCredentials(t *testing.T) {
+	t.Run("Positive case", func(t *testing.T) {
+		// Create a mock retriever for positive case
+		mockRetriever := new(MockAWSCredentialsRetriever)
+		creds := aws.Credentials{
+			AccessKeyID:     "mock_access_key",
+			SecretAccessKey: "mock_secret_key",
+			SessionToken:    "mock_session_token",
+		}
+		mockRetriever.On("Retrieve", mock.Anything).Return(creds, nil)
 
-    t.Run("Negative case", func(t *testing.T) {
-        // Initialize a mock object with failure simulation
-        mockRetriever := &MockAWSCredentialsRetriever{
-            SimulateSuccess: false,
-        }
-  
-        // Call the Retrieve method with the mock object
-        _, err := mockRetriever.Retrieve(context.Background())
-       
-        // Check if the error is as expected
-        if err == nil || err.Error() != "mock error" {
-            t.Errorf("Expected 'mock error', got '%v'", err)
-        }
-    })
+		// Call the function under test with the mock retriever
+		awsCreds, err := GetAWSCredentials(mockRetriever)
+
+		// Assert the results
+		assert.NoError(t, err)
+		assert.Equal(t, creds.AccessKeyID, awsCreds.AccessKeyID)
+		assert.Equal(t, creds.SecretAccessKey, awsCreds.SecretAccessKey)
+		assert.Equal(t, creds.SessionToken, awsCreds.SessionToken)
+
+		// Verify that the Retrieve method of the mock was called
+		mockRetriever.AssertCalled(t, "Retrieve", mock.Anything)
+	})
+
+	t.Run("Negative case", func(t *testing.T) {
+		// Create a mock retriever for negative case
+		mockRetriever := new(MockAWSCredentialsRetriever)
+		mockRetriever.On("Retrieve", mock.Anything).Return(aws.Credentials{}, errors.New("mock error"))
+
+		// Call the function under test with the mock retriever
+		_, err := GetAWSCredentials(mockRetriever)
+
+		// Assert the error
+		assert.Error(t, err)
+		assert.Equal(t, "failed to retrieve AWS credentials", err.Error())
+
+		// Verify that the Retrieve method of the mock was called
+		mockRetriever.AssertCalled(t, "Retrieve", mock.Anything)
+	})
 }

@@ -1,12 +1,15 @@
 package main
 
 import (
+	// "context"
 	"log"
 	"os"
-	"strings"
 
+	// "strings"
+
+	// "github.com/aws/aws-sdk-go-v2/config"
 	"github.com/lep13/AutoBuildGo/services/ecr"
-	"github.com/lep13/AutoBuildGo/services/gitsetup"
+	// "github.com/lep13/AutoBuildGo/services/gitsetup"
 )
 
 func main() {
@@ -14,23 +17,26 @@ func main() {
 		log.Fatal("Usage: go run main.go <repo-name> [\"optional description\"]")
 	}
 	repoName := os.Args[1]
-	description := "Default description for the repository" // Default description if none provided
+	// description := "Default description for the repository" // Default description if none provided
 
-	if len(os.Args) > 2 {
-		description = strings.Join(os.Args[2:], " ") // Combine all arguments after repoName as description
-	}
+	// if len(os.Args) > 2 {
+	// 	description = strings.Join(os.Args[2:], " ") // Combine all arguments after repoName as description
+	// }
 
+	// Create AWS client
+
+	var client ecr.AWSClient
 	// Create ECR Repository
-	if err := ecr.CreateRepo(repoName); err != nil {
+	if err := ecr.CreateRepo(repoName, client); err != nil {
 		log.Fatalf("Failed to create ECR repository: %v", err)
 	}
 
 	// Create Git Repository
-	config := gitsetup.DefaultRepoConfig(repoName, description)
+	// config := gitsetup.DefaultRepoConfig(repoName, description)
 
-	if err := gitsetup.CreateGitRepository(config); err != nil {
-		log.Fatalf("Failed to create Git repository: %v", err)
-	}
+	// if err := gitsetup.CreateGitRepository(config); err != nil {
+	// 	log.Fatalf("Failed to create Git repository: %v", err)
+	// }
 
 	log.Println("ECR and Git repositories created successfully")
 }
