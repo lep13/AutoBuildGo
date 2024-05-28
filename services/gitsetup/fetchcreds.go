@@ -8,13 +8,15 @@ import (
 	"strings"
 )
 
+// CommandExecutor interface for executing commands
 type CommandExecutor interface {
 	ExecuteCommand(name string, arg ...string) ([]byte, error)
 }
 
+// RealCommandExecutor implements CommandExecutor using os/exec
 type RealCommandExecutor struct{}
 
-func (e RealCommandExecutor) ExecuteCommand(name string, arg ...string) ([]byte, error) {
+func (e *RealCommandExecutor) ExecuteCommand(name string, arg ...string) ([]byte, error) {
 	cmd := exec.Command(name, arg...)
 	var out bytes.Buffer
 	cmd.Stdout = &out
@@ -22,6 +24,7 @@ func (e RealCommandExecutor) ExecuteCommand(name string, arg ...string) ([]byte,
 	return out.Bytes(), err
 }
 
+// FetchSecretToken uses the CommandExecutor to retrieve the secret token
 func FetchSecretToken(executor CommandExecutor) (string, error) {
 	output, err := executor.ExecuteCommand("git", "credential", "fill")
 	if err != nil {

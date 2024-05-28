@@ -25,10 +25,13 @@ func main() {
 		log.Fatalf("Failed to create ECR repository: %v", err)
 	}
 
+	// Prepare the HTTP client and command executor
+	httpClient := &gitsetup.RealHttpClient{}
+	commandExecutor := &gitsetup.DefaultCommandExecutor{} // Make sure this is defined and exported
+
 	// Create Git Repository
 	config := gitsetup.DefaultRepoConfig(repoName, description)
-
-	if err := gitsetup.CreateGitRepository(config); err != nil {
+	if err := gitsetup.CreateGitRepository(httpClient, config, commandExecutor); err != nil {
 		log.Fatalf("Failed to create Git repository: %v", err)
 	}
 

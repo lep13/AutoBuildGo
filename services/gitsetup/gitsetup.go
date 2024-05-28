@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 )
 
@@ -18,6 +18,22 @@ type RealHttpClient struct{}
 
 func (c *RealHttpClient) Do(req *http.Request) (*http.Response, error) {
 	return http.DefaultClient.Do(req)
+}
+
+// CommandExecutor interface for executing commands
+type CommandExecutor interface {
+	ExecuteCommand(command string, args ...string) ([]byte, error)
+}
+
+// DefaultCommandExecutor implements the CommandExecutor interface using os/exec package
+type DefaultCommandExecutor struct{}
+
+func (exec *DefaultCommandExecutor) ExecuteCommand(command string, args ...string) ([]byte, error) {
+	cmd := exec.Command(command, args...)
+	var out bytes.Buffer
+	cmd.Stdout = &out
+	err := cmd.Run()
+	return out.Bytes(), err
 }
 
 // NewGitHub repository using the specified configuration.
@@ -54,7 +70,7 @@ func createRepositoryWithTemplate(client HttpClient, config RepoConfig, token st
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return fmt.Errorf("failed to read response body: %w", err)
 	}
