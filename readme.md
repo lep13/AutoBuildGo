@@ -21,12 +21,23 @@ Before using AutoBuildGo, ensure you have the following prerequisites configured
 
 ## Commands
 ### Create Repositories
+
+You can run your main.go with a Dynamic description like this:
+```bash
+go run main.go <repo-name> ["optional description"]
+
+```
+
+If you do not want to add a description, run this to create a Git Repository with the default description: 
 ```bash
 go run main.go <reponame>
+
 ```
+
 Ensure the repository name is in the correct format as specified:
 
 The repository name should consist of lowercase letters and numbers, optionally separated by dots, underscores, or hyphens, and can include slashes to indicate subdirectories.
+
 
 ### Test
 To execute tests, navigate to the directory containing the respective test case files for ECR and GitHub:
@@ -34,4 +45,4 @@ To execute tests, navigate to the directory containing the respective test case 
 go test
 ```
 
-For more details and updates, refer to the [project's GitHub page](https://github.com/lep13/AutoBuildGo).
+For more details and updates, refer to the [project's GitHub page](https://github.com/lep13/ServiceTemplate).
