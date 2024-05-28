@@ -20,7 +20,7 @@ func (m *MockHTTPClient) Do(req *http.Request) (*http.Response, error) {
 }
 
 func TestCreateGitRepositorySuccess(t *testing.T) {
-	// Mock the HTTP client
+	// mocks a successful http client response
 	mockClient := &MockHTTPClient{
 		DoFunc: func(req *http.Request) (*http.Response, error) {
 			resp := &http.Response{

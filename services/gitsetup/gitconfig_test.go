@@ -8,15 +8,15 @@ import (
 )
 
 func TestLoadEnvSuccess(t *testing.T) {
-	// Setup the environment variable for the test
-	expectedURL := "https://example.com/template"
+	// sets the environment variable for the test
+	expectedURL := "https://api.github.com/repos/lep13/ServiceTemplate/generate"
 	os.Setenv("TEMPLATE_URL", expectedURL)
 	defer os.Unsetenv("TEMPLATE_URL") // Clean up after the test
 
-	// Invoke the function that loads the environment
+	// invoke the function that loads the environment
 	loadEnv()
 
-	// Check if the environment variable is correctly set
+	// check if the environment variable is correctly set
 	result := os.Getenv("TEMPLATE_URL")
 	assert.Equal(t, expectedURL, result, "TEMPLATE_URL did not match expected value")
 }

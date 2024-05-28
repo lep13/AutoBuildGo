@@ -8,6 +8,7 @@ import (
 )
 
 func init() {
+	//loading env variables from .env
 	loadEnv()
 }
 
@@ -25,7 +26,7 @@ func checkTemplateURL() {
 	}
 }
 
-// DefaultRepoConfig constructs a default repository configuration.
+// struct with default repository configuration.
 func DefaultRepoConfig(repoName string, description string) RepoConfig {
 	templateURL := os.Getenv("TEMPLATE_URL")
 	if templateURL == "" {
