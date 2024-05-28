@@ -4,12 +4,10 @@ import (
 	// "context"
 	"log"
 	"os"
+	"strings"
 
-	// "strings"
-
-	// "github.com/aws/aws-sdk-go-v2/config"
 	"github.com/lep13/AutoBuildGo/services/ecr"
-	// "github.com/lep13/AutoBuildGo/services/gitsetup"
+	"github.com/lep13/AutoBuildGo/services/gitsetup"
 )
 
 func main() {
@@ -19,9 +17,9 @@ func main() {
 	repoName := os.Args[1]
 	description := "Created from a template via automated setup" // Default description if none provided
 
-	// if len(os.Args) > 2 {
-	// 	description = strings.Join(os.Args[2:], " ") // Combine all arguments after repoName as description
-	// }
+	if len(os.Args) > 2 {
+		description = strings.Join(os.Args[2:], " ") // Combine all arguments after repoName as description
+	}
 
 	// Create AWS client
 
