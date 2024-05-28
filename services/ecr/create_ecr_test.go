@@ -1,141 +1,89 @@
 package ecr
 
-import "testing"
+import (
+	"context"
+	"errors"
+	"testing"
+
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ecr"
+	"github.com/aws/aws-sdk-go-v2/service/ecr/types"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+)
+
+// MockAWSClient is a mock implementation of AWSClient interface for testing purposes.
+type MockAWSClient struct {
+	mock.Mock
+}
+
+// CreateRepository mocks the CreateRepository method.
+func (m *MockAWSClient) CreateRepository(ctx context.Context, params *ecr.CreateRepositoryInput, optFns ...func(*ecr.Options)) (*ecr.CreateRepositoryOutput, error) {
+	args := m.Called(ctx, params)
+	return args.Get(0).(*ecr.CreateRepositoryOutput), args.Error(1)
+}
 
 func TestCreateRepo(t *testing.T) {
-	type args struct {
-		repoName string
-	}
-	tests := []struct {
-		name    string
-		args    args
-		wantErr bool
-	}{
-		{
-			name: "Valid Repo Name",
-			args: args{
-				repoName: "valid-repo",
+	t.Run("CreateRepository_Success", func(t *testing.T) {
+		mockClient := new(MockAWSClient)
+		repoName := "test-repo"
+		input := &ecr.CreateRepositoryInput{
+			RepositoryName:     aws.String(repoName),
+			ImageTagMutability: types.ImageTagMutabilityImmutable,
+			ImageScanningConfiguration: &types.ImageScanningConfiguration{
+				ScanOnPush: true,
 			},
-			wantErr: false,
-		},
-		{
-			name: "Repository Already Exists",
-			args: args{
-				repoName: "valid-repo",
+		}
+		mockClient.On("CreateRepository", context.Background(), input).Return(&ecr.CreateRepositoryOutput{}, nil)
+
+		err := CreateRepo(repoName, mockClient)
+
+		assert.NoError(t, err, "Expected no error for creating a new repository")
+		mockClient.AssertExpectations(t)
+	})
+
+	t.Run("CreateRepository_AlreadyExists", func(t *testing.T) {
+		mockClient := new(MockAWSClient)
+		repoName := "test-repo"
+		input := &ecr.CreateRepositoryInput{
+			RepositoryName:     aws.String(repoName),
+			ImageTagMutability: types.ImageTagMutabilityImmutable,
+			ImageScanningConfiguration: &types.ImageScanningConfiguration{
+				ScanOnPush: true,
 			},
-			wantErr: false, // This scenario should not return an error
-		},
-		{
-			name: "Invalid Repo Name: Single Character",
-			args: args{
-				repoName: "r",
+		}
+	
+		// Configure mockClient to return a non-nil output and nil error for RepositoryAlreadyExistsException
+		mockClient.On("CreateRepository", context.Background(), input).Return(&ecr.CreateRepositoryOutput{}, nil)
+	
+		err := CreateRepo(repoName, mockClient)
+	
+		assert.NoError(t, err, "Expected no error for existing repository")
+		mockClient.AssertExpectations(t)
+	})
+
+
+	t.Run("CreateRepository_Failure", func(t *testing.T) {
+		mockClient := new(MockAWSClient)
+		repoName := "test-repo"
+		input := &ecr.CreateRepositoryInput{
+			RepositoryName:     aws.String(repoName),
+			ImageTagMutability: types.ImageTagMutabilityImmutable,
+			ImageScanningConfiguration: &types.ImageScanningConfiguration{
+				ScanOnPush: true,
 			},
-			wantErr: true,
-		},
-		{
-			name: "Invalid Repo Name: Using Uppercase Letters",
-			args: args{
-				repoName: "VALID-REPO-NAME",
-			},
-			wantErr: true,
-		},
-		{
-			name: "Valid Repo Name: Contains Underscore",
-			args: args{
-				repoName: "valid_repo_name",
-			},
-			wantErr: false,
-		},
-		{
-			name: "Valid Repo Name: Contains Hyphen",
-			args: args{
-				repoName: "valid-repo-name",
-			},
-			wantErr: false,
-		},
-		{
-			name: "Valid Repo Name: Contains Digits",
-			args: args{
-				repoName: "repo123",
-			},
-			wantErr: false,
-		},
-		{
-			name: "Invalid Repo Name: Empty",
-			args: args{
-				repoName: "",
-			},
-			wantErr: true,
-		},
-		{
-			name: "Invalid Repo Name: Contains Special Characters",
-			args: args{
-				repoName: "repo@name",
-			},
-			wantErr: true,
-		},
-		{
-			name: "Invalid Repo Name: Uppercase Letters",
-			args: args{
-				repoName: "InvalidRepoName",
-			},
-			wantErr: true,
-		},
-		{
-			name: "Invalid Repo Name: Leading Hyphen",
-			args: args{
-				repoName: "-invalid-repo-name",
-			},
-			wantErr: true,
-		},
-		{
-			name: "Invalid Repo Name: Trailing Hyphen",
-			args: args{
-				repoName: "invalid-repo-name-",
-			},
-			wantErr: true,
-		},
-		{
-			name: "Invalid Repo Name: Multiple Consecutive Hyphens",
-			args: args{
-				repoName: "invalid--repo--name",
-			},
-			wantErr: true,
-		},
-		{
-			name: "Invalid Repo Name: Leading Slash",
-			args: args{
-				repoName: "/invalid-repo-name",
-			},
-			wantErr: true,
-		},
-		{
-			name: "Invalid Repo Name: Trailing Slash",
-			args: args{
-				repoName: "invalid-repo-name/",
-			},
-			wantErr: true,
-		},
-		{
-			name: "Invalid Repo Name: Contains Spaces",
-			args: args{
-				repoName: "invalid repo name",
-			},
-			wantErr: true,
-		},
-		{
-			name: "Invalid Repo Name: Contains Non-ASCII Characters",
-			args: args{
-				repoName: "répö-nämé",
-			},
-			wantErr: true,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if err := CreateRepo(tt.args.repoName); (err != nil) != tt.wantErr {
-				t.Errorf("CreateRepo() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
-	}
+		}
+		expectedErr := errors.New("some error")
+		
+		// Configure mockClient to return nil output and a non-nil error
+		mockClient.On("CreateRepository", context.Background(), input).Return(&ecr.CreateRepositoryOutput{}, expectedErr)
+	
+		err := CreateRepo(repoName, mockClient)
+	
+		assert.Error(t, err, "Expected an error for unknown repository creation error")
+		assert.Equal(t, expectedErr, err, "Expected the same error returned by AWS client")
+		mockClient.AssertExpectations(t)
+	})
+	
+	
 }

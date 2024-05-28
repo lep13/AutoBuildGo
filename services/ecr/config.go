@@ -1,25 +1,29 @@
-// config.go
-
 package ecr
 
 import (
 	"context"
-	"log"
-
-	// "github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/config"
 )
 
-// ConfigLoader defines the interface for loading AWS SDK config
-type ConfigLoader interface {
-	LoadDefaultConfig(ctx context.Context) (interface{}, error)
-}
 
-// LoadConfig loads the AWS SDK config
-func LoadConfig(loader ConfigLoader) (interface{}, error) {
-	cfg, err := loader.LoadDefaultConfig(context.Background())
+// NewAWSConfig creates a new AWS configuration with provided credentials.
+func NewAWSConfig(creds AWSCredentials) (aws.Config, error) {
+	cfg, err := config.LoadDefaultConfig(context.Background(),
+		config.WithCredentialsProvider(
+			aws.NewCredentialsCache(
+				aws.CredentialsProviderFunc(func(context.Context) (aws.Credentials, error) {
+					return aws.Credentials{
+						AccessKeyID:     creds.AccessKeyID,
+						SecretAccessKey: creds.SecretAccessKey,
+						SessionToken:    creds.SessionToken,
+					}, nil
+				}),
+			),
+		),
+	)
 	if err != nil {
-		log.Printf("Unable to load SDK config: %v", err)
-		return nil, err
+		return aws.Config{}, err
 	}
 	return cfg, nil
 }
