@@ -3,66 +3,56 @@ package ecr
 import (
 	"context"
 	"errors"
-	// "reflect"
+	// "fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/config"
-	// "github.com/aws/aws-sdk-go-v2/service/secretsmanager"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestLoadConfig(t *testing.T) {
-	tests := []struct {
-		name    string
-		wantErr bool
-	}{
-		{
-			name:    "Load default config successfully",
-			wantErr: false,
-		},
-		{
-			name:    "Load default config with non-nil error",
-			wantErr: true,
-		},
-		{
-			name:    "Load default config with AWS credentials",
-			wantErr: false,
-		},
-		{
-			name:    "Load config with custom region",
-			wantErr: false,
-		},
-		{
-			name:    "Load config with custom endpoint",
-			wantErr: false,
-		},
-	}
+	t.Run("Success", func(t *testing.T) {
+		// Mock your config loader implementation
+		mockLoader := mockConfigLoader{
+			ShouldSucceed: true,
+			Error: assert.AnError,
+		}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			var cfg aws.Config
-			var err error
+		// Call your LoadConfig function
+		_, err := LoadConfig(mockLoader)
 
-			if tt.wantErr {
-				err = errors.New("sample error")
-			} else {
-				// Simulate successful configuration loading
-				cfg, err = config.LoadDefaultConfig(context.TODO())
-			}
+		// Check if the error is nil
+		assert.Nil(t, err)
+	})
 
-			if (err != nil) != tt.wantErr {
-				t.Errorf("LoadConfig() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
+	t.Run("Error", func(t *testing.T) {
+		// Mock your config loader implementation to return an error
+		mockLoader := mockConfigLoader{
+			Error: assert.AnError,
+			ShouldSucceed: false,
+		}
 
-			// Add assertions for specific cases if needed
-			if !tt.wantErr {
-				// Check if config is loaded successfully
-				if cfg.Region == "" {
-					t.Errorf("Expected non-empty region in config")
-				}
-			}
-		})
-	}
+		// Call your LoadConfig function
+		_, err := LoadConfig(mockLoader)
+
+		// Check if the error is not nil
+		assert.Error(t, err)
+		// Check if the error message matches the expected error message
+		assert.EqualError(t, err, "error loading config")
+	})
 }
 
+// Mock implementation of ConfigLoader interface for testing
+type mockConfigLoader struct {
+	Error error
+	ShouldSucceed bool // Flag to control whether to simulate success or failure
+}
+
+// Mock implementation of LoadDefaultConfig method for testing
+func (m mockConfigLoader) LoadDefaultConfig(ctx context.Context) (interface{}, error) {
+	if m.ShouldSucceed {
+		// Mock your desired behavior here for success
+		return struct{}{}, nil
+	}
+	// Mock your desired behavior here for failure
+	return nil, errors.New("error loading config")
+}

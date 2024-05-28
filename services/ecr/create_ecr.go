@@ -14,7 +14,7 @@ import (
 func CreateRepo(repoName string) error {
 	creds, err := GetAWSCredentials()
 	if err != nil {
-		log.Printf("Failed to get AWS credentials: %v", err)
+		// log.Printf("Failed to get AWS credentials: %v", err)
 		return err
 	}
 
@@ -32,7 +32,7 @@ func CreateRepo(repoName string) error {
 		),
 	)
 	if err != nil {
-		log.Printf("Unable to load SDK config: %v", err)
+		// log.Printf("Unable to load SDK config: %v", err)
 		return err
 	}
 
