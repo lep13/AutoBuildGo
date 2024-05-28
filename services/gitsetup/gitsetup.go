@@ -4,22 +4,33 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io"
+	"io/ioutil"
 	"net/http"
 )
 
-// new GitHub repository using the specified configuration.
-func CreateGitRepository(config RepoConfig) error {
-	// Fetch the token using the FetchSecretToken function.
-	token, err := FetchSecretToken()
+// HttpClient interface for making HTTP requests
+type HttpClient interface {
+	Do(req *http.Request) (*http.Response, error)
+}
+
+// RealHttpClient implements HttpClient using http.DefaultClient
+type RealHttpClient struct{}
+
+func (c *RealHttpClient) Do(req *http.Request) (*http.Response, error) {
+	return http.DefaultClient.Do(req)
+}
+
+// NewGitHub repository using the specified configuration.
+func CreateGitRepository(client HttpClient, config RepoConfig, executor CommandExecutor) error {
+	token, err := FetchSecretToken(executor)
 	if err != nil {
 		return err
 	}
-	return createRepositoryWithTemplate(config, token)
+	return createRepositoryWithTemplate(client, config, token)
 }
 
-// sends a request to GitHub API to create a repository from a template.
-func createRepositoryWithTemplate(config RepoConfig, token string) error {
+// Sends a request to GitHub API to create a repository from a template.
+func createRepositoryWithTemplate(client HttpClient, config RepoConfig, token string) error {
 	data, err := json.Marshal(map[string]interface{}{
 		"name":        config.Name,
 		"description": config.Description,
@@ -29,7 +40,6 @@ func createRepositoryWithTemplate(config RepoConfig, token string) error {
 		return err
 	}
 
-	client := &http.Client{}
 	req, err := http.NewRequest(http.MethodPost, config.TemplateURL, bytes.NewBuffer(data))
 	if err != nil {
 		return err
@@ -44,14 +54,14 @@ func createRepositoryWithTemplate(config RepoConfig, token string) error {
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode == http.StatusCreated {
-		return nil
-	}
-
-	body, err := io.ReadAll(resp.Body)
+	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return fmt.Errorf("failed to read response body: %w", err)
 	}
 
-	return fmt.Errorf("failed to create repository, status code: %d, response: %s", resp.StatusCode, string(body))
+	if resp.StatusCode != http.StatusCreated {
+		return fmt.Errorf("failed to create repository, status code: %d, response: %s", resp.StatusCode, string(body))
+	}
+
+	return nil
 }

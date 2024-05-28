@@ -8,23 +8,27 @@ import (
 	"strings"
 )
 
-// retrieves the GitHub token from the local Git configuration.
-func FetchSecretToken() (string, error) {
-	// git credential fill command to fetch stored credentials
-	cmd := exec.Command("git", "credential", "fill")
-	cmdInput := bytes.NewBufferString("url=https://github.com\n")
-	cmd.Stdin = cmdInput
+type CommandExecutor interface {
+	ExecuteCommand(name string, arg ...string) ([]byte, error)
+}
 
-	// output from the command
+type RealCommandExecutor struct{}
+
+func (e RealCommandExecutor) ExecuteCommand(name string, arg ...string) ([]byte, error) {
+	cmd := exec.Command(name, arg...)
 	var out bytes.Buffer
 	cmd.Stdout = &out
 	err := cmd.Run()
+	return out.Bytes(), err
+}
+
+func FetchSecretToken(executor CommandExecutor) (string, error) {
+	output, err := executor.ExecuteCommand("git", "credential", "fill")
 	if err != nil {
 		return "", fmt.Errorf("error running git credential fill: %v", err)
 	}
 
-	// Read the output and parse the password field
-	scanner := bufio.NewScanner(&out)
+	scanner := bufio.NewScanner(bytes.NewReader(output))
 	for scanner.Scan() {
 		line := scanner.Text()
 		if strings.HasPrefix(line, "password=") {
