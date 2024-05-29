@@ -20,17 +20,28 @@ Before using AutoBuildGo, ensure you have the following prerequisites configured
 - **GitHub Actions**: Implements CI/CD pipelines for automated testing and deployment.
 
 ## Commands
-### Create Repositories
+### Running the Application
 
-You can run your main.go with a Dynamic description like this:
+#### Command-Line Mode:
+
 ```bash
 go run main.go <repo-name> ["optional description"]
 
 ```
 
-If you do not want to add a description, run this to create a Git Repository with the default description: 
+#### Web Server Mode:
+
+Start the server without arguments:
+
 ```bash
-go run main.go <reponame>
+go run main.go
+```
+
+#### Make a POST request to create a repository:
+
+
+```bash
+curl -X POST -H "Content-Type: application/json" -d '{"repo_name": "test-repo", "description": "A test repository"}' http://localhost:8080/create-repo
 
 ```
 

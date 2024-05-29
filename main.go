@@ -1,7 +1,6 @@
 package main
 
 import (
-	// "context"
 	"log"
 	"os"
 	"strings"
@@ -11,6 +10,14 @@ import (
 )
 
 func main() {
+	if len(os.Args) > 1 {
+		handleCLI()
+	} else {
+		gitsetup.HandleWebServer()
+	}
+}
+
+func handleCLI() {
 	if len(os.Args) < 2 {
 		log.Fatal("Usage: go run main.go <repo-name> [\"optional description\"]")
 	}
@@ -22,12 +29,15 @@ func main() {
 	}
 
 	// Create AWS client
-
 	var client ecr.AWSClient
+
 	// Create ECR Repository
 	if err := ecr.CreateRepo(repoName, client); err != nil {
 		log.Fatalf("Failed to create ECR repository: %v", err)
 	}
+
+	// Ensure environment is loaded
+	gitsetup.LoadEnv()
 
 	// Create Git Repository
 	config := gitsetup.DefaultRepoConfig(repoName, description)

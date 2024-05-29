@@ -26,6 +26,11 @@ func checkTemplateURL() {
 	}
 }
 
+// LoadEnv is accessible function for loading env variables.
+func LoadEnv() {
+	loadEnv()
+}
+
 // struct with default repository configuration.
 func DefaultRepoConfig(repoName string, description string) RepoConfig {
 	templateURL := os.Getenv("TEMPLATE_URL")
