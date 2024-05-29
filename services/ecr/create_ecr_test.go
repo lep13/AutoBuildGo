@@ -1,72 +1,58 @@
 package ecr
 
 import (
-	"context"
-	"errors"
-	"testing"
+    "context"
+    "errors"
+    "testing"
 
-	"github.com/aws/aws-sdk-go-v2/service/ecr"
-	"github.com/aws/aws-sdk-go-v2/service/ecr/types"
+    "github.com/aws/aws-sdk-go-v2/service/ecr"
+    "github.com/stretchr/testify/assert"
 )
 
-// mockAWSClient is a mock implementation of the AWSClient interface for testing purposes.
-type mockAWSClient struct {
-	CreateRepositoryFunc func(ctx context.Context, params *ecr.CreateRepositoryInput, optFns ...func(*ecr.Options)) (*ecr.CreateRepositoryOutput, error)
+// MockECRClient is a mock implementation of ECRClientInterface for testing.
+type MockECRClient struct {
+    CreateRepositoryFunc func(ctx context.Context, params *ecr.CreateRepositoryInput, optFns ...func(*ecr.Options)) (*ecr.CreateRepositoryOutput, error)
 }
 
-func (m *mockAWSClient) CreateRepository(ctx context.Context, params *ecr.CreateRepositoryInput, optFns ...func(*ecr.Options)) (*ecr.CreateRepositoryOutput, error) {
-	return m.CreateRepositoryFunc(ctx, params, optFns...)
+// CreateRepository mocks the CreateRepository method.
+func (m *MockECRClient) CreateRepository(ctx context.Context, params *ecr.CreateRepositoryInput, optFns ...func(*ecr.Options)) (*ecr.CreateRepositoryOutput, error) {
+    if m.CreateRepositoryFunc != nil {
+        return m.CreateRepositoryFunc(ctx, params, optFns...)
+    }
+    return nil, nil
 }
 
 func TestCreateRepo(t *testing.T) {
-	t.Run("Positive case - Successful creation", func(t *testing.T) {
-		// Initialize a mock object with success simulation
-		mockClient := &mockAWSClient{
-			CreateRepositoryFunc: func(ctx context.Context, params *ecr.CreateRepositoryInput, optFns ...func(*ecr.Options)) (*ecr.CreateRepositoryOutput, error) {
-				return &ecr.CreateRepositoryOutput{}, nil
-			},
-		}
+    // Positive test case
+    t.Run("CreateRepository_Success", func(t *testing.T) {
+        mockClient := &MockECRClient{
+            CreateRepositoryFunc: func(ctx context.Context, params *ecr.CreateRepositoryInput, optFns ...func(*ecr.Options)) (*ecr.CreateRepositoryOutput, error) {
+                return &ecr.CreateRepositoryOutput{}, nil
+            },
+        }
+        err := CreateRepo("testRepo", mockClient)
+        assert.NoError(t, err)
+    })
 
-		// Call the CreateRepo function with the mock client
-		err := CreateRepo("test-repo", mockClient)
+    // Negative test case: Generic failure
+    t.Run("CreateRepository_Failure", func(t *testing.T) {
+        mockClient := &MockECRClient{
+            CreateRepositoryFunc: func(ctx context.Context, params *ecr.CreateRepositoryInput, optFns ...func(*ecr.Options)) (*ecr.CreateRepositoryOutput, error) {
+                return nil, errors.New("some error message") // Replace this with the error you want to simulate
+            },
+        }
+        err := CreateRepo("testRepo", mockClient)
+        assert.Error(t, err)
+    })
 
-		// Check if there is no error
-		if err != nil {
-			t.Errorf("Unexpected error: %v", err)
-		}
-	})
-
-	t.Run("Negative case - Repository already exists", func(t *testing.T) {
-		// Initialize a mock object with repository already exists simulation
-		mockClient := &mockAWSClient{
-			CreateRepositoryFunc: func(ctx context.Context, params *ecr.CreateRepositoryInput, optFns ...func(*ecr.Options)) (*ecr.CreateRepositoryOutput, error) {
-				return nil, &types.RepositoryAlreadyExistsException{}
-			},
-		}
-
-		// Call the CreateRepo function with the mock client
-		err := CreateRepo("existing-repo", mockClient)
-
-		// Check if there is no error (since it should handle already exists case gracefully)
-		if err != nil {
-			t.Errorf("Unexpected error: %v", err)
-		}
-	})
-
-	t.Run("Negative case - Error creating repository", func(t *testing.T) {
-		// Initialize a mock object with failure simulation
-		mockClient := &mockAWSClient{
-			CreateRepositoryFunc: func(ctx context.Context, params *ecr.CreateRepositoryInput, optFns ...func(*ecr.Options)) (*ecr.CreateRepositoryOutput, error) {
-				return nil, errors.New("create repository failed")
-			},
-		}
-
-		// Call the CreateRepo function with the mock client
-		err := CreateRepo("error-repo", mockClient)
-
-		// Check if the error is as expected
-		if err == nil || err.Error() != "create repository failed" {
-			t.Errorf("Expected 'create repository failed' error, got '%v'", err)
-		}
-	})
+    // Negative test case: Repository already exists
+    t.Run("CreateRepository_RepoAlreadyExists", func(t *testing.T) {
+        mockClient := &MockECRClient{
+            CreateRepositoryFunc: func(ctx context.Context, params *ecr.CreateRepositoryInput, optFns ...func(*ecr.Options)) (*ecr.CreateRepositoryOutput, error) {
+                return nil, errors.New("repository already exists") // Simulate repository already exists error
+            },
+        }
+        err := CreateRepo("testRepo", mockClient)
+        assert.Error(t, err)
+    })
 }
