@@ -45,11 +45,15 @@ func CreateRepoHandler(w http.ResponseWriter, r *http.Request) {
 		description = "Created from a template via automated setup"
 	}
 
-	// Create AWS client
-	var client ecr.AWSClient
+	// Create ECR client
+	ecrClient, err := ecr.CreateECRClient()
+	if err != nil {
+		http.Error(w, "Failed to create ECR client: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
 
 	// Create ECR Repository
-	if err := ecr.CreateRepo(req.RepoName, client); err != nil {
+	if err := ecr.CreateRepo(req.RepoName, ecrClient); err != nil {
 		http.Error(w, "Failed to create ECR repository: "+err.Error(), http.StatusInternalServerError)
 		return
 	}

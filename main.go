@@ -1,13 +1,10 @@
 package main
 
 import (
-	"context"
 	"log"
 	"os"
-
 	"strings"
 
-	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/lep13/AutoBuildGo/services/ecr"
 	"github.com/lep13/AutoBuildGo/services/gitsetup"
 )
@@ -25,16 +22,13 @@ func handleCLI() {
 		log.Fatal("Usage: go run main.go <repo-name> [\"optional description\"]")
 	}
 	repoName := os.Args[1]
-	// description := "Created from a template via automated setup" // Default description if none provided
+	description := "Created from a template via automated setup" // Default description if none provided
 
 	if len(os.Args) > 2 {
 		description = strings.Join(os.Args[2:], " ") // Combine all arguments after repoName as description
 	}
 
-	// Create AWS client
-
-	var client ecr.AWSClient
-	
+	// Create ECR client
 	ecrClient, err := ecr.CreateECRClient()
 	if err != nil {
 		log.Fatalf("Failed to create ECR client: %v", err)
