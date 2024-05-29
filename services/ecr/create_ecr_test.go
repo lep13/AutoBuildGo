@@ -1,89 +1,72 @@
 package ecr
 
-// import (
-// 	"context"
-// 	"errors"
-// 	"testing"
+import (
+	"context"
+	"errors"
+	"testing"
 
-// 	"github.com/aws/aws-sdk-go-v2/aws"
-// 	"github.com/aws/aws-sdk-go-v2/service/ecr"
-// 	"github.com/aws/aws-sdk-go-v2/service/ecr/types"
-// 	"github.com/stretchr/testify/assert"
-// 	"github.com/stretchr/testify/mock"
-// )
+	"github.com/aws/aws-sdk-go-v2/service/ecr"
+	"github.com/aws/aws-sdk-go-v2/service/ecr/types"
+)
 
-// // MockAWSClient is a mock implementation of AWSClient interface for testing purposes.
-// type MockAWSClient struct {
-// 	mock.Mock
-// }
+// mockAWSClient is a mock implementation of the AWSClient interface for testing purposes.
+type mockAWSClient struct {
+	CreateRepositoryFunc func(ctx context.Context, params *ecr.CreateRepositoryInput, optFns ...func(*ecr.Options)) (*ecr.CreateRepositoryOutput, error)
+}
 
-// // CreateRepository mocks the CreateRepository method.
-// func (m *MockAWSClient) CreateRepository(ctx context.Context, params *ecr.CreateRepositoryInput, optFns ...func(*ecr.Options)) (*ecr.CreateRepositoryOutput, error) {
-// 	args := m.Called(ctx, params)
-// 	return args.Get(0).(*ecr.CreateRepositoryOutput), args.Error(1)
-// }
+func (m *mockAWSClient) CreateRepository(ctx context.Context, params *ecr.CreateRepositoryInput, optFns ...func(*ecr.Options)) (*ecr.CreateRepositoryOutput, error) {
+	return m.CreateRepositoryFunc(ctx, params, optFns...)
+}
 
-// func TestCreateRepo(t *testing.T) {
-// 	t.Run("CreateRepository_Success", func(t *testing.T) {
-// 		mockClient := new(MockAWSClient)
-// 		repoName := "test-repo"
-// 		input := &ecr.CreateRepositoryInput{
-// 			RepositoryName:     aws.String(repoName),
-// 			ImageTagMutability: types.ImageTagMutabilityImmutable,
-// 			ImageScanningConfiguration: &types.ImageScanningConfiguration{
-// 				ScanOnPush: true,
-// 			},
-// 		}
-// 		mockClient.On("CreateRepository", context.Background(), input).Return(&ecr.CreateRepositoryOutput{}, nil)
+func TestCreateRepo(t *testing.T) {
+	t.Run("Positive case - Successful creation", func(t *testing.T) {
+		// Initialize a mock object with success simulation
+		mockClient := &mockAWSClient{
+			CreateRepositoryFunc: func(ctx context.Context, params *ecr.CreateRepositoryInput, optFns ...func(*ecr.Options)) (*ecr.CreateRepositoryOutput, error) {
+				return &ecr.CreateRepositoryOutput{}, nil
+			},
+		}
 
-// 		err := CreateRepo(repoName, mockClient)
+		// Call the CreateRepo function with the mock client
+		err := CreateRepo("test-repo", mockClient)
 
-// 		assert.NoError(t, err, "Expected no error for creating a new repository")
-// 		mockClient.AssertExpectations(t)
-// 	})
+		// Check if there is no error
+		if err != nil {
+			t.Errorf("Unexpected error: %v", err)
+		}
+	})
 
-// 	t.Run("CreateRepository_AlreadyExists", func(t *testing.T) {
-// 		mockClient := new(MockAWSClient)
-// 		repoName := "test-repo"
-// 		input := &ecr.CreateRepositoryInput{
-// 			RepositoryName:     aws.String(repoName),
-// 			ImageTagMutability: types.ImageTagMutabilityImmutable,
-// 			ImageScanningConfiguration: &types.ImageScanningConfiguration{
-// 				ScanOnPush: true,
-// 			},
-// 		}
-	
-// 		// Configure mockClient to return a non-nil output and nil error for RepositoryAlreadyExistsException
-// 		mockClient.On("CreateRepository", context.Background(), input).Return(&ecr.CreateRepositoryOutput{}, nil)
-	
-// 		err := CreateRepo(repoName, mockClient)
-	
-// 		assert.NoError(t, err, "Expected no error for existing repository")
-// 		mockClient.AssertExpectations(t)
-// 	})
+	t.Run("Negative case - Repository already exists", func(t *testing.T) {
+		// Initialize a mock object with repository already exists simulation
+		mockClient := &mockAWSClient{
+			CreateRepositoryFunc: func(ctx context.Context, params *ecr.CreateRepositoryInput, optFns ...func(*ecr.Options)) (*ecr.CreateRepositoryOutput, error) {
+				return nil, &types.RepositoryAlreadyExistsException{}
+			},
+		}
 
+		// Call the CreateRepo function with the mock client
+		err := CreateRepo("existing-repo", mockClient)
 
-// 	t.Run("CreateRepository_Failure", func(t *testing.T) {
-// 		mockClient := new(MockAWSClient)
-// 		repoName := "test-repo"
-// 		input := &ecr.CreateRepositoryInput{
-// 			RepositoryName:     aws.String(repoName),
-// 			ImageTagMutability: types.ImageTagMutabilityImmutable,
-// 			ImageScanningConfiguration: &types.ImageScanningConfiguration{
-// 				ScanOnPush: true,
-// 			},
-// 		}
-// 		expectedErr := errors.New("some error")
-		
-// 		// Configure mockClient to return nil output and a non-nil error
-// 		mockClient.On("CreateRepository", context.Background(), input).Return(&ecr.CreateRepositoryOutput{}, expectedErr)
-	
-// 		err := CreateRepo(repoName, mockClient)
-	
-// 		assert.Error(t, err, "Expected an error for unknown repository creation error")
-// 		assert.Equal(t, expectedErr, err, "Expected the same error returned by AWS client")
-// 		mockClient.AssertExpectations(t)
-// 	})
-	
-	
-// }
+		// Check if there is no error (since it should handle already exists case gracefully)
+		if err != nil {
+			t.Errorf("Unexpected error: %v", err)
+		}
+	})
+
+	t.Run("Negative case - Error creating repository", func(t *testing.T) {
+		// Initialize a mock object with failure simulation
+		mockClient := &mockAWSClient{
+			CreateRepositoryFunc: func(ctx context.Context, params *ecr.CreateRepositoryInput, optFns ...func(*ecr.Options)) (*ecr.CreateRepositoryOutput, error) {
+				return nil, errors.New("create repository failed")
+			},
+		}
+
+		// Call the CreateRepo function with the mock client
+		err := CreateRepo("error-repo", mockClient)
+
+		// Check if the error is as expected
+		if err == nil || err.Error() != "create repository failed" {
+			t.Errorf("Expected 'create repository failed' error, got '%v'", err)
+		}
+	})
+}

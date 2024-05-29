@@ -17,19 +17,6 @@ type AWSClient interface {
 
 // CreateRepo creates a repository in Amazon ECR using the provided AWS client.
 func CreateRepo(repoName string, client AWSClient) error {
-	
-	creds, err := GetAWSCredentials()
-	if err != nil {
-		return err
-	}
-
-	cfg, err := NewAWSConfig(creds)
-	if err != nil {
-		return err
-	}
-
-	ecrClient := ecr.NewFromConfig(cfg)
-
 	input := ecr.CreateRepositoryInput{
 		RepositoryName:     aws.String(repoName),
 		ImageTagMutability: types.ImageTagMutabilityImmutable,
@@ -38,12 +25,12 @@ func CreateRepo(repoName string, client AWSClient) error {
 		},
 	}
 
-	_, err = ecrClient.CreateRepository(context.Background(), &input)
+	_, err := client.CreateRepository(context.Background(), &input)
 	if err != nil {
 		var repoAlreadyExistsErr *types.RepositoryAlreadyExistsException
 		if errors.As(err, &repoAlreadyExistsErr) {
 			log.Printf("Repository %s already exists.", repoName)
-			return nil // Return early if repository already exists
+			return nil
 		}
 		log.Printf("Failed to create repository: %v", err)
 		return err
