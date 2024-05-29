@@ -3,14 +3,13 @@ package gitsetup
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"os/exec"
 	"sync"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
+	"github.com/aws/aws-sdk-go/aws"
 )
 
 // CommandRunner defines an interface for running commands.
@@ -50,12 +49,7 @@ func FetchSecretToken() (string, error) {
 	}
 	secretCache.Unlock()
 
-	creds, err := GetAWSCredentials()
-	if err != nil {
-		return "", fmt.Errorf("error retrieving AWS credentials: %v", err)
-	}
-
-	cfg, err := config.LoadDefaultConfig(context.Background(), config.WithCredentialsProvider(creds))
+	cfg, err := config.LoadDefaultConfig(context.Background())
 	if err != nil {
 		return "", fmt.Errorf("error loading AWS config: %v", err)
 	}
@@ -81,38 +75,4 @@ func FetchSecretToken() (string, error) {
 	secretCache.Unlock()
 
 	return secretData.GITHUB_TOKEN, nil
-}
-
-type AWSCredentials struct {
-	AccessKeyID     string
-	SecretAccessKey string
-	SessionToken    string
-}
-
-// Retrieve returns the AWS credentials.
-func (c AWSCredentials) Retrieve(ctx context.Context) (aws.Credentials, error) {
-	return aws.Credentials{
-		AccessKeyID:     c.AccessKeyID,
-		SecretAccessKey: c.SecretAccessKey,
-		SessionToken:    c.SessionToken,
-	}, nil
-}
-
-// GetAWSCredentials retrieves AWS credentials
-func GetAWSCredentials() (AWSCredentials, error) {
-	cfg, err := config.LoadDefaultConfig(context.Background())
-	if err != nil {
-		return AWSCredentials{}, errors.New("failed to load AWS config")
-	}
-
-	creds, err := cfg.Credentials.Retrieve(context.Background())
-	if err != nil {
-		return AWSCredentials{}, errors.New("failed to retrieve AWS credentials")
-	}
-
-	return AWSCredentials{
-		AccessKeyID:     creds.AccessKeyID,
-		SecretAccessKey: creds.SecretAccessKey,
-		SessionToken:    creds.SessionToken,
-	}, nil
 }

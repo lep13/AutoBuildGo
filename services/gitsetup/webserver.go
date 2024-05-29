@@ -15,11 +15,15 @@ type RepoRequest struct {
 
 func HandleWebServer() {
 	http.HandleFunc("/create-repo", CreateRepoHandler)
-	log.Println("Starting server on :8080...")
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	log.Println("Server is starting on :8080...")
+	err := http.ListenAndServe(":8080", nil)
+	if err != nil {
+		log.Fatalf("Server failed to start: %v", err)
+	}
 }
 
 func CreateRepoHandler(w http.ResponseWriter, r *http.Request) {
+	log.Println("CreateRepoHandler invoked")
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
