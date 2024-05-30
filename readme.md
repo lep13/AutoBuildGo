@@ -26,23 +26,23 @@ Before using GoAutoSetup, ensure you have the following prerequisites configured
 
 To run the application and create a repository using the command line, use the following command:
 
-\`\`\`sh
+```bash
 go run main.go <repo-name> ["optional description"]
-\`\`\`
+```
 
 #### Web Server Mode:
 
 To start the application as a web server, use the following command without any arguments:
 
-\`\`\`sh
+```bash
 go run main.go
-\`\`\`
+```
 
 Once the server is running, you can create a repository by making a POST request to the server's endpoint:
 
-\`\`\`sh
+```bash
 curl -X POST -H "Content-Type: application/json" -d '{"repo_name": "test-repo", "description": "A test repository"}' http://localhost:8080/create-repo
-\`\`\`
+```
 
 Ensure the repository name is in the correct format as specified:
 The repository name should consist of lowercase letters and numbers, optionally separated by dots, underscores, or hyphens, and can include slashes to indicate subdirectories.
