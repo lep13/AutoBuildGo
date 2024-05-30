@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/lep13/AutoBuildGo/services/ecr"
 )
@@ -67,6 +68,15 @@ func CreateRepoHandler(w http.ResponseWriter, r *http.Request) {
 
 	if err := gitClient.CreateGitRepository(config); err != nil {
 		http.Error(w, "Failed to create Git repository: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// 20 second time delay
+	time.Sleep(20 * time.Second)
+
+	// Clone the repo, update go.mod, and push changes
+	if err := CloneAndPushRepo(req.RepoName); err != nil {
+		http.Error(w, "Failed to clone and push repository: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 

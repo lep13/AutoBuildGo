@@ -38,6 +38,21 @@ var secretCache = struct {
 	data map[string]string
 }{data: make(map[string]string)}
 
+var secretsManagerClient SecretsManagerClient
+
+type SecretsManagerClient interface {
+	GetSecretValue(ctx context.Context, input *secretsmanager.GetSecretValueInput, opts ...func(*secretsmanager.Options)) (*secretsmanager.GetSecretValueOutput, error)
+}
+
+func init() {
+	cfg, err := config.LoadDefaultConfig(context.Background())
+	if err != nil {
+		panic(fmt.Sprintf("unable to load SDK config, %v", err))
+	}
+
+	secretsManagerClient = secretsmanager.NewFromConfig(cfg)
+}
+
 // FetchSecretToken retrieves the GitHub token from AWS Secrets Manager.
 func FetchSecretToken() (string, error) {
 	const secretName = "github_token"
@@ -49,17 +64,11 @@ func FetchSecretToken() (string, error) {
 	}
 	secretCache.Unlock()
 
-	cfg, err := config.LoadDefaultConfig(context.Background())
-	if err != nil {
-		return "", fmt.Errorf("error loading AWS config: %v", err)
-	}
-
-	client := secretsmanager.NewFromConfig(cfg)
 	input := &secretsmanager.GetSecretValueInput{
 		SecretId: aws.String(secretName),
 	}
 
-	result, err := client.GetSecretValue(context.Background(), input)
+	result, err := secretsManagerClient.GetSecretValue(context.Background(), input)
 	if err != nil {
 		return "", fmt.Errorf("error fetching secret value: %v", err)
 	}
