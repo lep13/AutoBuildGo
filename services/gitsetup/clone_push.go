@@ -78,6 +78,16 @@ func CloneAndPushRepo(repoName string) error {
 		return fmt.Errorf("error pushing changes: %v", err)
 	}
 
+	// Go back to the previous directory
+	if err := os.Chdir(".."); err != nil {
+		return fmt.Errorf("error changing back to the parent directory: %v", err)
+	}
+
+	// Remove the cloned repository
+	if err := os.RemoveAll(repoName); err != nil {
+		return fmt.Errorf("error removing the cloned repository: %v", err)
+	}
+
 	return nil
 }
 
