@@ -13,10 +13,13 @@ func init() {
 }
 
 func loadEnv() {
-	// Attempt to load .env file first
-	err := godotenv.Load()
+	err := godotenv.Load(".env")
 	if err != nil {
-		log.Println("Debug: .env file not loaded")
+		log.Printf("Error loading .env file: %v", err)
+		panic("TEMPLATE_URL must be set in the environment")
+	}
+	if os.Getenv("TEMPLATE_URL") == "" {
+		panic("TEMPLATE_URL must be set in the environment")
 	}
 }
 
