@@ -4,6 +4,7 @@ import (
 	"log"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/lep13/AutoBuildGo/services/ecr"
 	"github.com/lep13/AutoBuildGo/services/gitsetup"
@@ -51,4 +52,12 @@ func handleCLI() {
 	}
 
 	log.Println("ECR and Git repositories created successfully")
+
+	// 20 second time delay
+	time.Sleep(20 * time.Second)
+
+	// Clone the repo, update go.mod, and push changes
+	if err := gitsetup.CloneAndPushRepo(repoName); err != nil {
+		log.Fatalf("Failed to clone and push repository: %v", err)
+	}
 }
