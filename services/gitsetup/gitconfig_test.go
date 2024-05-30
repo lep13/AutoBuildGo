@@ -22,12 +22,11 @@ func TestLoadEnvSuccess(t *testing.T) {
 }
 
 func TestLoadEnvFailNoEnvFile(t *testing.T) {
-	// Clear TEMPLATE_URL to simulate a missing .env and unset environment variable
-	originalValue := os.Getenv("TEMPLATE_URL")
-	os.Unsetenv("TEMPLATE_URL")
-	defer os.Setenv("TEMPLATE_URL", originalValue) // Restore after test
+	// Remove any .env files in the test environment or simulate the condition
+	os.Remove(".env")           // Ensure there is no .env file
+	os.Unsetenv("TEMPLATE_URL") // Ensure the environment variable is not set
 
-	// This should panic because TEMPLATE_URL is not set and no .env will be found
+	// Run the function and expect a panic
 	assert.Panics(t, func() {
 		loadEnv()
 	}, "Expected panic due to missing TEMPLATE_URL and no .env file")
