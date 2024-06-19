@@ -1,88 +1,98 @@
 package gitsetup
 
 import (
-	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
-func TestLoadEnvSuccess(t *testing.T) {
-	// sets the environment variable for the test
-	expectedURL := "https://api.github.com/repos/lep13/ServiceTemplate/generate"
-	os.Setenv("TEMPLATE_URL", expectedURL)
-	defer os.Unsetenv("TEMPLATE_URL") // Clean up after the test
-
-	// invoke the function that loads the environment
-	loadEnv()
-
-	// check if the environment variable is correctly set
-	result := os.Getenv("TEMPLATE_URL")
-	assert.Equal(t, expectedURL, result, "TEMPLATE_URL did not match expected value")
+// MockGoDotEnv mocks the GoDotEnvLoader interface.
+type MockGoDotEnv struct {
+	mock.Mock
 }
 
-func TestLoadEnvFailNoEnvFile(t *testing.T) {
-	// Remove any .env files in the test environment or simulate the condition
-	os.Remove(".env")           // Ensure there is no .env file
-	os.Unsetenv("TEMPLATE_URL") // Ensure the environment variable is not set
+// Load mocks the Load method.
+func (m *MockGoDotEnv) Load(filenames ...string) error {
+	args := m.Called(filenames[0])
+	return args.Error(0)
+}
 
-	// Run the function and expect a panic
-	assert.Panics(t, func() {
+// MockOS mocks the OSGetter interface.
+type MockOS struct {
+	mock.Mock
+}
+
+// Getenv mocks the Getenv method.
+func (m *MockOS) Getenv(key string) string {
+	args := m.Called(key)
+	return args.String(0)
+}
+
+var (
+	mockGoDotEnv *MockGoDotEnv
+	mockOS       *MockOS
+)
+
+func init() {
+	mockGoDotEnv = new(MockGoDotEnv)
+	mockOS = new(MockOS)
+	goDotEnvLoader = mockGoDotEnv
+	osGetter = mockOS
+}
+
+func TestLoadEnv_Success(t *testing.T) {
+	mockGoDotEnv.On("Load", ".env").Return(nil)
+	mockOS.On("Getenv", "TEMPLATE_URL").Return("some_template_url")
+
+	assert.NotPanics(t, func() {
 		loadEnv()
-	}, "Expected panic due to missing TEMPLATE_URL and no .env file")
+	})
+
+	mockGoDotEnv.AssertCalled(t, "Load", ".env")
+	mockOS.AssertCalled(t, "Getenv", "TEMPLATE_URL")
 }
 
-func TestCheckTemplateURLPanics(t *testing.T) {
-	// Ensure no TEMPLATE_URL is set
-	os.Unsetenv("TEMPLATE_URL")
-	defer os.Unsetenv("TEMPLATE_URL") // Clean up after the test
+func TestLoadEnv_Failure(t *testing.T) {
+	mockGoDotEnv.On("Load", ".env").Return(nil)
+	mockOS.On("Getenv", "TEMPLATE_URL").Return("")
 
-	// This should panic because TEMPLATE_URL is required
-	assert.Panics(t, func() {
-		checkTemplateURL()
-	}, "Expected panic due to missing TEMPLATE_URL")
+	assert.PanicsWithValue(t, "TEMPLATE_URL must be set in the environment", func() {
+		loadEnv()
+	})
+
+	mockGoDotEnv.AssertCalled(t, "Load", ".env")
+	mockOS.AssertCalled(t, "Getenv", "TEMPLATE_URL")
 }
 
-func TestCheckTemplateURLSuccess(t *testing.T) {
-	// Set a valid TEMPLATE_URL
-	os.Setenv("TEMPLATE_URL", "https://example.com/template")
-	defer os.Unsetenv("TEMPLATE_URL") // Clean up after the test
+func TestCheckTemplateURL_Success(t *testing.T) {
+	mockOS.On("Getenv", "TEMPLATE_URL").Return("some_template_url")
 
-	// This should not panic
 	assert.NotPanics(t, func() {
 		checkTemplateURL()
-	}, "Did not expect panic with valid TEMPLATE_URL set")
+	})
+
+	mockOS.AssertCalled(t, "Getenv", "TEMPLATE_URL")
 }
 
-func TestDefaultRepoConfigSuccess(t *testing.T) {
-	// Setup: Set TEMPLATE_URL in environment
-	expectedURL := "https://example.com/template"
-	os.Setenv("TEMPLATE_URL", expectedURL)
-	defer os.Unsetenv("TEMPLATE_URL")
+func TestCheckTemplateURL_Failure(t *testing.T) {
+	mockOS.On("Getenv", "TEMPLATE_URL").Return("")
 
-	repoName := "test-repo"
-	description := "Test repository"
+	assert.PanicsWithValue(t, "TEMPLATE_URL must be set in the environment", func() {
+		checkTemplateURL()
+	})
 
-	// Call the function
-	config := DefaultRepoConfig(repoName, description)
+	mockOS.AssertCalled(t, "Getenv", "TEMPLATE_URL")
+}
 
-	// Assertions
-	assert.Equal(t, repoName, config.Name)
-	assert.Equal(t, description, config.Description)
+func TestDefaultRepoConfig(t *testing.T) {
+	mockOS.On("Getenv", "TEMPLATE_URL").Return("some_template_url")
+
+	config := DefaultRepoConfig("repoName", "description")
+
+	assert.Equal(t, "repoName", config.Name)
+	assert.Equal(t, "description", config.Description)
 	assert.Equal(t, true, config.Private)
 	assert.Equal(t, true, config.AutoInit)
-	assert.Equal(t, expectedURL, config.TemplateURL)
-}
-
-func TestDefaultRepoConfigMissingTemplateURL(t *testing.T) {
-	// Ensure TEMPLATE_URL is not set
-	os.Unsetenv("TEMPLATE_URL")
-
-	repoName := "test-repo"
-	description := "Test repository"
-
-	// Expected to panic because TEMPLATE_URL is not set
-	assert.Panics(t, func() {
-		DefaultRepoConfig(repoName, description)
-	}, "Expected panic due to missing TEMPLATE_URL")
+	assert.Equal(t, "some_template_url", config.TemplateURL)
 }

@@ -32,7 +32,7 @@ type SecretsManagerClient interface {
 var secretsManagerClient SecretsManagerClient
 
 func init() {
-	cfg, err := config.LoadDefaultConfig(context.Background(), config.WithRegion("us-east-1")) 
+	cfg, err := configLoader.LoadDefaultConfig(context.Background(), config.WithRegion("us-east-1"))
 	if err != nil {
 		log.Fatalf("unable to load SDK config, %v", err)
 	}
@@ -71,12 +71,12 @@ func FetchSecretToken() (string, error) {
 	}
 	secretCache.Unlock()
 
-	cfg, err := configLoader.LoadDefaultConfig(context.Background())
+	_, err := configLoader.LoadDefaultConfig(context.Background())
 	if err != nil {
 		return "", fmt.Errorf("error loading AWS config: %v", err)
 	}
 
-	client := secretsmanager.NewFromConfig(cfg)
+	client := secretsManagerClient
 	input := &secretsmanager.GetSecretValueInput{
 		SecretId: aws.String(secretName),
 	}

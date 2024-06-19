@@ -51,8 +51,8 @@ The repository name should consist of lowercase letters and numbers, optionally 
 
 To execute tests for the ECR and GitHub functionalities, navigate to the directory containing the respective test case files and run:
 
-\`\`\`sh
+```bash
 go test ./...
-\`\`\`
+```
 
 For more details and updates, refer to the [project's GitHub page](https://github.com/lep13/ServiceTemplate).

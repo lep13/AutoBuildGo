@@ -7,36 +7,63 @@ import (
 	"github.com/joho/godotenv"
 )
 
-func init() {
-	//loading env variables from .env
+type GoDotEnvLoader interface {
+	Load(filenames ...string) error
+}
+
+type OSGetter interface {
+	Getenv(key string) string
+}
+
+var goDotEnvLoader GoDotEnvLoader = godotenvLoader{}
+var osGetter OSGetter = osEnvGetter{}
+
+type godotenvLoader struct{}
+
+func (godotenvLoader) Load(filenames ...string) error {
+	return godotenv.Load(filenames...)
+}
+
+type osEnvGetter struct{}
+
+func (osEnvGetter) Getenv(key string) string {
+	return os.Getenv(key)
+}
+
+// InitEnv initializes the environment variables.
+func InitEnv() {
 	loadEnv()
+	checkTemplateURL()
 }
 
 func loadEnv() {
-	err := godotenv.Load(".env")
-	if err != nil {
+	if err := goDotEnvLoader.Load(".env"); err != nil {
 		log.Printf("Error loading .env file: %v", err)
-		panic("TEMPLATE_URL must be set in the environment")
 	}
-	if os.Getenv("TEMPLATE_URL") == "" {
+	if osGetter.Getenv("TEMPLATE_URL") == "" {
 		panic("TEMPLATE_URL must be set in the environment")
 	}
 }
 
 func checkTemplateURL() {
-	if os.Getenv("TEMPLATE_URL") == "" {
+	if osGetter.Getenv("TEMPLATE_URL") == "" {
 		panic("TEMPLATE_URL must be set in the environment")
 	}
 }
 
-// LoadEnv is accessible function for loading env variables.
+// LoadEnv is an accessible function for loading env variables.
 func LoadEnv() {
 	loadEnv()
 }
 
-// struct with default repository configuration.
+// CheckTemplateURL is an accessible function for checking the TEMPLATE_URL variable.
+func CheckTemplateURL() {
+	checkTemplateURL()
+}
+
+// DefaultRepoConfig provides a default repository configuration.
 func DefaultRepoConfig(repoName string, description string) RepoConfig {
-	templateURL := os.Getenv("TEMPLATE_URL")
+	templateURL := osGetter.Getenv("TEMPLATE_URL")
 	if templateURL == "" {
 		panic("TEMPLATE_URL must be set in the environment")
 	}
